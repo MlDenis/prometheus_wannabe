@@ -1,6 +1,8 @@
+![6aaabeab-4079-4277-9213-9e677194a206](https://github.com/MlDenis/prometheus_wannabe/assets/89723953/73238174-550f-4dc1-b637-c167179fde07)
+
 # go-musthave-metrics-tpl
 
-Шаблон репозитория для трека «Сервер сбора метрик и алертинга».
+Repository for the track "Server for collecting metrics and alerting".
 
 ## Начало работы
 
