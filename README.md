@@ -1,34 +1,28 @@
 ![6aaabeab-4079-4277-9213-9e677194a206](https://github.com/MlDenis/prometheus_wannabe/assets/89723953/73238174-550f-4dc1-b637-c167179fde07)
 
-# go-musthave-metrics-tpl
+# prometheus_wannabe
 
 Repository for the track "Server for collecting metrics and alerting".
 
-## Начало работы
+## Template update
 
-1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
-2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` — адрес вашего репозитория на GitHub без префикса `https://`) для создания модуля.
-
-## Обновление шаблона
-
-Чтобы иметь возможность получать обновления автотестов и других частей шаблона, выполните команду:
-
+To be able to receive updates to autotests and other parts of the template, run the command:
 ```
 git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-metrics-tpl.git
 ```
 
-Для обновления кода автотестов выполните команду:
+To update the autotest code, run the command:
 
 ```
 git fetch template && git checkout template/main .github
 ```
 
-Затем добавьте полученные изменения в свой репозиторий.
+Then add the resulting changes to your repository.
 
-## Запуск автотестов
+## Running Autotests
 
-Для успешного запуска автотестов называйте ветки `iter<number>`, где `<number>` — порядковый номер инкремента. Например, в ветке с названием `iter4` запустятся автотесты для инкрементов с первого по четвёртый.
+To successfully run autotests, name the branches `iter<number>`, where `<number>` is the serial number of the increment. For example, a branch named `iter4` will run autotests for increments one through four.
 
-При мёрже ветки с инкрементом в основную ветку `main` будут запускаться все автотесты.
+When merging a branch with an increment to the `main` branch, all autotests will be run.
 
-Подробнее про локальный и автоматический запуск читайте в [README автотестов](https://github.com/Yandex-Practicum/go-autotests).
+Read more about local and automatic launch in the [README of autotests](https://github.com/Yandex-Practicum/go-autotests).
