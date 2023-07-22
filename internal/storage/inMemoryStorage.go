@@ -6,15 +6,15 @@ import (
 	"sync"
 )
 
-type MemStorage struct {
+type InMemoryStorage struct {
 	metricNames    []string
 	gaugeMetrics   map[string]metrics.Metric
 	counterMetrics map[string]metrics.Metric
 	lock           sync.RWMutex
 }
 
-func NewMemStorage() MetricsStorage {
-	return &MemStorage{
+func NewInMemoryStorage() MetricsStorage {
+	return &InMemoryStorage{
 		metricNames:    []string{},
 		gaugeMetrics:   map[string]metrics.Metric{},
 		counterMetrics: map[string]metrics.Metric{},
@@ -22,23 +22,23 @@ func NewMemStorage() MetricsStorage {
 	}
 }
 
-func (ms *MemStorage) AddGaugeMetric(metricName string, value float64) {
+func (ms *InMemoryStorage) AddGaugeMetric(metricName string, value float64) {
 	ms.lock.Lock()
 	defer ms.lock.Unlock()
 	serviceMetricUpdate(ms.gaugeMetrics, &ms.metricNames, metricName, value, metrics.NewGaugeMetric)
 }
 
-func (ms *MemStorage) AddCounterMetric(name string, value int64) {
+func (ms *InMemoryStorage) AddCounterMetric(name string, value int64) {
 	ms.lock.Lock()
 	defer ms.lock.Unlock()
 	serviceMetricUpdate(ms.counterMetrics, &ms.metricNames, name, float64(value), metrics.NewCounterMetric)
 }
 
-func (ms *MemStorage) GetMetric(metricType string, metricName string) (string, bool) {
+func (ms *InMemoryStorage) GetMetric(metricType string, metricName string) (string, bool) {
 	// TODO: Add implementation
 }
 
-func (ms *MemStorage) GetAllMetrics() map[string]map[string]string {
+func (ms *InMemoryStorage) GetAllMetrics() map[string]map[string]string {
 	// TODO: Add implementation
 }
 
