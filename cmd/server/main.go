@@ -19,7 +19,7 @@ func main() {
 
 	err := http.ListenAndServe(serverListeningAddress, nil)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 	}
 }
 
