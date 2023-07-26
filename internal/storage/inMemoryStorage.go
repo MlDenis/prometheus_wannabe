@@ -36,10 +36,12 @@ func (ms *InMemoryStorage) AddCounterMetric(name string, value int64) {
 
 func (ms *InMemoryStorage) GetMetric(metricType string, metricName string) (string, bool) {
 	// TODO: Add implementation
+	return "", false
 }
 
 func (ms *InMemoryStorage) GetAllMetrics() map[string]map[string]string {
 	// TODO: Add implementation
+	return nil
 }
 
 func serviceMetricUpdate(metricsMap map[string]metrics.Metric, keys *[]string, metricName string, value float64, metricFactory func(string) metrics.Metric) {

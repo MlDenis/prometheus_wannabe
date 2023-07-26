@@ -1,3 +1,3 @@
 module github.com/MlDenis/prometheus_wannabe
 
-go 1.21rc2
+go 1.20
