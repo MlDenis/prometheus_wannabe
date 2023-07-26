@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/MlDenis/prometheus_wannabe/internal/type_converter"
+	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"sync"
 )
 
@@ -30,7 +30,7 @@ func (m *counterMetric) GetName() string {
 func (m *counterMetric) GetStringValue() string {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	return type_converter.IntToString(m.metricValue)
+	return converter.IntToString(m.metricValue)
 }
 
 func (m *counterMetric) SetValue(addedValue float64) {

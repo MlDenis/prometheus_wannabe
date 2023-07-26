@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/storage"
-	"github.com/MlDenis/prometheus_wannabe/internal/type_converter"
 	"net/http"
 	"strings"
 )
@@ -48,7 +48,7 @@ func handleUpdateRequest(storage storage.MetricsStorage) func(w http.ResponseWri
 		switch metricType {
 		case "gauge":
 			{
-				value, err := type_converter.ToFloat64(stringValue)
+				value, err := converter.ToFloat64(stringValue)
 				if err != nil {
 					writeResponse(w, http.StatusBadRequest, fmt.Sprintf("Value converting fail %v: %v", stringValue, err.Error()))
 					return
@@ -58,7 +58,7 @@ func handleUpdateRequest(storage storage.MetricsStorage) func(w http.ResponseWri
 			}
 		case "counter":
 			{
-				value, err := type_converter.ToInt64(stringValue)
+				value, err := converter.ToInt64(stringValue)
 				if err != nil {
 					writeResponse(w, http.StatusBadRequest, fmt.Sprintf("Value converting fail %v: %v", stringValue, err.Error()))
 					return
