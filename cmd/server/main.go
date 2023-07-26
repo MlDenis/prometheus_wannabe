@@ -30,12 +30,6 @@ func handleUpdateRequest(storage storage.MetricsStorage) func(w http.ResponseWri
 			return
 		}
 
-		contentType := r.Header.Get("Content-Type")
-		if contentType != "text/plain" {
-			writeResponse(w, http.StatusUnsupportedMediaType, "Unsupported content type")
-			return
-		}
-
 		parts := strings.Split(r.URL.Path, "/")
 		if len(parts) != 5 {
 			writeResponse(w, http.StatusNotFound, "404 page not found")
