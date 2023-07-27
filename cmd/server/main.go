@@ -152,6 +152,6 @@ func successResponse(w http.ResponseWriter, contentType string, message string) 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
-		fmt.Printf("Write response failure: %v", err.Error())
+		fmt.Printf("Response write failure: %v", err.Error())
 	}
 }
