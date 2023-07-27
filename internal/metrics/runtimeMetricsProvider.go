@@ -38,7 +38,7 @@ func (p *runtimeMetricsProvider) Update(context.Context) error {
 		}
 
 		metric.SetValue(metricValue)
-		fmt.Printf("%V metric was update with %v value.", metricName, metric.GetStringValue())
+		fmt.Printf("%v metric was update with %v value.", metricName, metric.GetStringValue())
 	}
 	return nil
 }

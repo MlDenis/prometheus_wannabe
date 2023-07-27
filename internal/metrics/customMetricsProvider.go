@@ -29,10 +29,10 @@ func (c *customMetricsProvider) Update(context.Context) error {
 	fmt.Println("Start collect custom metrics")
 
 	c.poolMetric.SetValue(1)
-	fmt.Println("Updated metric: %v. value: %v", c.poolMetric.GetName(), c.poolMetric.GetStringValue())
+	fmt.Printf("Updated metric: %v. value: %v", c.poolMetric.GetName(), c.poolMetric.GetStringValue())
 
 	c.randomMetric.SetValue(rand.Float64())
-	fmt.Println("Updated metric: %v. value: %v", c.randomMetric.GetName(), c.randomMetric.GetStringValue())
+	fmt.Printf("Updated metric: %v. value: %v", c.randomMetric.GetName(), c.randomMetric.GetStringValue())
 
 	return nil
 }
