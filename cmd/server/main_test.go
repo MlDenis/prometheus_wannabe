@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/MlDenis/prometheus_wannabe/cmd/html"
+	"github.com/MlDenis/prometheus_wannabe/internal/html"
 	"github.com/MlDenis/prometheus_wannabe/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"io"
