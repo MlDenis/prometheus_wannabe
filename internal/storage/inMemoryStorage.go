@@ -1,57 +1,82 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"sort"
 	"sync"
 )
 
 type InMemoryStorage struct {
-	metricNames    []string
-	gaugeMetrics   map[string]metrics.Metric
-	counterMetrics map[string]metrics.Metric
-	lock           sync.RWMutex
+	metricsByType map[string]map[string]metrics.Metric
+	lock          sync.RWMutex
 }
 
 func NewInMemoryStorage() MetricsStorage {
 	return &InMemoryStorage{
-		metricNames:    []string{},
-		gaugeMetrics:   map[string]metrics.Metric{},
-		counterMetrics: map[string]metrics.Metric{},
-		lock:           sync.RWMutex{},
+		metricsByType: map[string]map[string]metrics.Metric{},
+		lock:          sync.RWMutex{},
 	}
 }
 
-func (ms *InMemoryStorage) AddGaugeMetric(metricName string, value float64) {
+func (ms *InMemoryStorage) AddGaugeMetric(metricName string, metricValue float64) {
 	ms.lock.Lock()
 	defer ms.lock.Unlock()
-	serviceMetricUpdate(ms.gaugeMetrics, &ms.metricNames, metricName, value, metrics.NewGaugeMetric)
+	ms.serviceMetricUpdate("gauge", metricName, metricValue, metrics.NewGaugeMetric)
 }
 
-func (ms *InMemoryStorage) AddCounterMetric(name string, value int64) {
+func (ms *InMemoryStorage) AddCounterMetric(metricName string, metricValue int64) {
 	ms.lock.Lock()
 	defer ms.lock.Unlock()
-	serviceMetricUpdate(ms.counterMetrics, &ms.metricNames, name, float64(value), metrics.NewCounterMetric)
+	ms.serviceMetricUpdate("counter", metricName, float64(metricValue), metrics.NewCounterMetric)
 }
 
 func (ms *InMemoryStorage) GetMetric(metricType string, metricName string) (string, bool) {
-	// TODO: Add implementation
-	return "", false
+	ms.lock.RLock()
+	defer ms.lock.RUnlock()
+
+	metricsByName, ok := ms.metricsByType[metricType]
+	if !ok {
+		fmt.Printf("Metrics with type %v not found", metricType)
+		return "", false
+	}
+
+	metric, ok := metricsByName[metricName]
+	if !ok {
+		fmt.Printf("Metrics with name %v and type %v not found", metricName, metricType)
+		return "", false
+	}
+
+	return metric.GetStringValue(), true
 }
 
 func (ms *InMemoryStorage) GetAllMetrics() map[string]map[string]string {
-	// TODO: Add implementation
-	return nil
+	ms.lock.RLock()
+	defer ms.lock.RUnlock()
+
+	metricValues := map[string]map[string]string{}
+	for metricsType, metricsList := range ms.metricsByType {
+		values := map[string]string{}
+		metricValues[metricsType] = values
+
+		for metricName, metric := range metricsList {
+			values[metricName] = metric.GetStringValue()
+		}
+	}
+
+	return metricValues
 }
 
-func serviceMetricUpdate(metricsMap map[string]metrics.Metric, keys *[]string, metricName string, value float64, metricFactory func(string) metrics.Metric) {
-	currentMetric, ok := metricsMap[metricName]
+func (ms *InMemoryStorage) serviceMetricUpdate(metricType string, name string, value float64, metricFactory func(string) metrics.Metric) {
+	metricsList, ok := ms.metricsByType[metricType]
 	if !ok {
-		currentMetric = metricFactory(metricName)
-		metricsMap[metricName] = currentMetric
+		metricsList = map[string]metrics.Metric{}
+		ms.metricsByType[metricType] = metricsList
+	}
 
-		*keys = append(*keys, metricName)
-		sort.Strings(*keys)
+	currentMetric, ok := metricsList[name]
+	if !ok {
+		currentMetric = metricFactory(name)
+		metricsList[name] = currentMetric
 	}
 
 	currentMetric.SetValue(value)

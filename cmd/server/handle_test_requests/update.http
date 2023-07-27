@@ -1,6 +1,0 @@
-POST http://localhost:8080/update/gauge/lol/10
-Content-Type: text/plain
-
-{}
-
-###

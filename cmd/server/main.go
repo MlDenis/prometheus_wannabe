@@ -1,89 +1,157 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
+	"github.com/MlDenis/prometheus_wannabe/internal/html"
 	"github.com/MlDenis/prometheus_wannabe/internal/storage"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
-	"strings"
 )
 
-const serverListeningAddress = "localhost:8080"
+const (
+	serverListeningAddress = "localhost:8080"
+	metricInfoKey          = "metricInfo"
+)
+
+type metricInfoContextKey struct {
+	key string
+}
+
+type metricInfo struct {
+	metricType  string
+	metricName  string
+	metricValue string
+}
 
 func main() {
 
 	metricsStorage := storage.NewInMemoryStorage()
+	htmlPageBuilder := html.NewSimplePageBuilder()
+	router := initRouter(metricsStorage, htmlPageBuilder)
 
-	http.HandleFunc("/update/", handleUpdateRequest(metricsStorage))
-	http.HandleFunc("/", http.NotFound)
-
-	err := http.ListenAndServe(serverListeningAddress, nil)
+	fmt.Println("Listening start: " + serverListeningAddress)
+	err := http.ListenAndServe(serverListeningAddress, router)
 	if err != nil {
-		fmt.Print(err.Error())
+		fmt.Println(err.Error())
 	}
 }
 
-func handleUpdateRequest(storage storage.MetricsStorage) func(w http.ResponseWriter, r *http.Request) {
+func initRouter(metricsStorage storage.MetricsStorage, htmlPageBuilder html.HTMLPageBuilder) *chi.Mux {
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Route("/update", func(r chi.Router) {
+		r.Route("/gauge/{metricName}/{metricValue}", func(r chi.Router) {
+			r.Use(fillMetricContext)
+			r.Post("/", updateGaugeMetric(metricsStorage))
+		})
+		r.Route("/counter/{metricName}/{metricValue}", func(r chi.Router) {
+			r.Use(fillMetricContext)
+			r.Post("/", updateCounterMetric(metricsStorage))
+		})
+		r.Post("/{metricType}/{metricName}/{metricValue}", func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "Unknown metric type", http.StatusNotImplemented)
+		})
+	})
+	router.Route("/value", func(r chi.Router) {
+		r.Route("/{metricType}/{metricName}", func(r chi.Router) {
+			r.Use(fillMetricContext)
+			r.Get("/", handleMetricValue(metricsStorage))
+		})
+	})
+
+	router.Route("/", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			successResponse(w, "text/html", htmlPageBuilder.BuildMetricsPage(metricsStorage.GetAllMetrics()))
+		})
+	})
+
+	return router
+}
+
+func fillMetricContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		metricContext := &metricInfo{
+			metricType:  chi.URLParam(r, "metricType"),
+			metricName:  chi.URLParam(r, "metricName"),
+			metricValue: chi.URLParam(r, "metricValue"),
+		}
+
+		ctx := context.WithValue(r.Context(), metricInfoContextKey{key: metricInfoKey}, metricContext)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func updateGaugeMetric(storage storage.MetricsStorage) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			writeResponse(w, http.StatusMethodNotAllowed, "Method not allowed")
+		ctx := r.Context()
+		metricContext, ok := ctx.Value(metricInfoContextKey{key: metricInfoKey}).(*metricInfo)
+		if !ok {
+			http.Error(w, "Metric info not found in context", http.StatusInternalServerError)
 			return
 		}
 
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 5 {
-			writeResponse(w, http.StatusNotFound, "404 page not found")
+		value, err := converter.ToFloat64(metricContext.metricValue)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Value parsing fail %v: %v", metricContext.metricValue, err.Error()), http.StatusBadRequest)
 			return
 		}
 
-		metricType := parts[2]
-		metricName := parts[3]
-		stringValue := parts[4]
+		storage.AddGaugeMetric(metricContext.metricName, value)
 
-		if metricName == "" {
-			writeResponse(w, http.StatusNotFound, "404 page not found")
-			return
-		}
-
-		switch metricType {
-		case "gauge":
-			{
-				value, err := converter.ToFloat64(stringValue)
-				if err != nil {
-					writeResponse(w, http.StatusBadRequest, fmt.Sprintf("Value converting fail %v: %v", stringValue, err.Error()))
-					return
-				}
-
-				storage.AddGaugeMetric(metricName, value)
-			}
-		case "counter":
-			{
-				value, err := converter.ToInt64(stringValue)
-				if err != nil {
-					writeResponse(w, http.StatusBadRequest, fmt.Sprintf("Value converting fail %v: %v", stringValue, err.Error()))
-					return
-				}
-
-				storage.AddCounterMetric(metricName, value)
-			}
-
-		default:
-			{
-				writeResponse(w, http.StatusBadRequest, fmt.Sprintf("Unknown metric type: %v", metricType))
-				return
-			}
-		}
-
-		writeResponse(w, http.StatusOK, "Success")
-		fmt.Printf("%v metric was update with value: %v", metricName, stringValue)
+		successResponse(w, "text/plain", "ok")
+		fmt.Printf("Updated metric: %v. value: %v", metricContext.metricName, metricContext.metricValue)
 	}
 }
 
-func writeResponse(w http.ResponseWriter, statusCode int, message string) {
-	w.Header().Add("Content-Type", "text/plain")
-	w.WriteHeader(statusCode)
+func updateCounterMetric(storage storage.MetricsStorage) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		metricContext, ok := ctx.Value(metricInfoContextKey{key: metricInfoKey}).(*metricInfo)
+		if !ok {
+			http.Error(w, "Metric info not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		value, err := converter.ToInt64(metricContext.metricValue)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Value parsing fail %v: %v", metricContext.metricValue, err.Error()), http.StatusBadRequest)
+			return
+		}
+
+		storage.AddCounterMetric(metricContext.metricName, value)
+
+		successResponse(w, "text/plain", "ok")
+		fmt.Printf("Updated metric: %v. value: %v", metricContext.metricName, metricContext.metricValue)
+	}
+}
+
+func handleMetricValue(storage storage.MetricsStorage) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		metricContext, ok := ctx.Value(metricInfoContextKey{key: metricInfoKey}).(*metricInfo)
+		if !ok {
+			http.Error(w, "Metric info not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		value, ok := storage.GetMetric(metricContext.metricType, metricContext.metricName)
+		if !ok {
+			http.Error(w, "Metric not found", http.StatusNotFound)
+			return
+		}
+
+		successResponse(w, "text/plain", value)
+	}
+}
+
+func successResponse(w http.ResponseWriter, contentType string, message string) {
+	w.Header().Add("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
-		fmt.Printf("Write response failure: %v", err.Error())
+		fmt.Println("Write response failure: %v", err.Error())
 	}
 }
