@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	serverListeningAddress = "localhost:8080"
-	metricInfoKey          = "metricInfo"
+	metricInfoKey = "metricInfo"
 )
 
 type metricInfoContextKey struct {
@@ -33,13 +32,19 @@ type metricInfo struct {
 }
 
 func main() {
+	cfg, err := createConfig()
 
-	metricsStorage := storage.NewInMemoryStorage()
+	if err != nil {
+		fmt.Printf("Fail to create config file: %v", err.Error())
+		panic(err)
+	}
+	fmt.Printf("Starting server with the following configuration:%v", cfg)
+
+	inMemoryStorage := storage.NewInMemoryStorage()
 	htmlPageBuilder := html.NewSimplePageBuilder()
-	router := initRouter(metricsStorage, htmlPageBuilder)
+	router := initRouter(inMemoryStorage, htmlPageBuilder)
 
-	fmt.Println("Listening start: " + serverListeningAddress)
-	err := http.ListenAndServe(serverListeningAddress, router)
+	err = http.ListenAndServe(cfg.ListenURL, router)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

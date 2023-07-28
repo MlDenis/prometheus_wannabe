@@ -80,9 +80,9 @@ func createConfig() (*config, error) {
 	}
 
 	flag.StringVar(&cfg.MetricReceiverAddress, "a", "http://localhost:8080", "Metrics server URL")
-	flag.DurationVar(&cfg.ReportInterval, "r", 10*time.Second, "Send metrics interval")
-	flag.DurationVar(&cfg.PollInterval, "p", 2*time.Second, "Update metrics interval")
-	flag.DurationVar(&cfg.SendTimeout, "t", 10*time.Second, "Push metrics timeout")
+	flag.DurationVar(&cfg.ReportInterval, "r", time.Second*10, "Send metrics interval")
+	flag.DurationVar(&cfg.PollInterval, "p", time.Second*2, "Update metrics interval")
+	flag.DurationVar(&cfg.SendTimeout, "t", time.Second*10, "Push metrics timeout")
 	flag.Parse()
 
 	err := env.Parse(cfg)
