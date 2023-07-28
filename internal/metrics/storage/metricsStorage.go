@@ -1,8 +1,13 @@
 package storage
 
+import (
+	"context"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
+)
+
 type MetricsStorage interface {
-	AddGaugeMetric(name string, value float64)
-	AddCounterMetric(name string, value int64)
-	GetMetric(metricType string, metricName string) (string, bool)
-	GetAllMetrics() map[string]map[string]string
+	AddMetricValues(ctx context.Context, metric []metrics.Metric) ([]metrics.Metric, error)
+	GetMetricValues(ctx context.Context) (map[string]map[string]string, error)
+	GetMetric(ctx context.Context, metricType string, metricName string) (metrics.Metric, error)
+	Restore(ctx context.Context, metricValues map[string]map[string]string) error
 }

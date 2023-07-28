@@ -2,7 +2,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"time"
 )
 
@@ -18,15 +18,16 @@ func NewHardWorker(workFunc func(ctx context.Context) error) HardWorker {
 
 func (w *HardWorker) StartWork(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
 			err := w.workFunc(ctx)
 			if err != nil {
-				fmt.Printf("Hard worker error: %v.", err.Error())
+				logger.ErrorFormat("periodic worker error: %v", err)
 			}
 		case <-ctx.Done():
-			fmt.Println("The worker stopped working.")
+			logger.ErrorFormat("periodic worker canceled")
 			return
 		}
 	}

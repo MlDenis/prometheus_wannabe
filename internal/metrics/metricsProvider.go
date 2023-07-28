@@ -3,6 +3,6 @@ package metrics
 import "context"
 
 type MetricsProvider interface {
-	GetMetrics() []Metric
+	GetMetrics() <-chan (Metric)
 	Update(ctx context.Context) error
 }

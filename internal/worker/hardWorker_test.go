@@ -2,9 +2,12 @@ package worker
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/test"
 )
 
 func TestPeriodicWorker_CloseContext(t *testing.T) {
@@ -27,7 +30,11 @@ func TestPeriodicWorker_SuccessCall(t *testing.T) {
 	defer cancel()
 
 	worker := NewHardWorker(func(context.Context) error {
-		wasCalled = true
+		if !wasCalled {
+			wasCalled = true
+			return test.ErrTest
+		}
+
 		cancel()
 		return nil
 	})
