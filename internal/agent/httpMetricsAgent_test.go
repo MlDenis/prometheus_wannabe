@@ -51,12 +51,12 @@ func TestHttpMetricsPusher_Push(t *testing.T) {
 			}))
 			defer server.Close()
 
-			pusher, err := NewHTTPMetricsAgent(&config{
+			pusher, _ := NewHTTPMetricsAgent(&config{
 				connetionString: server.URL,
 				timeout:         10 * time.Second,
 			})
 
-			err = pusher.Send(ctx, tt.metricsToPush)
+			err := pusher.Send(ctx, tt.metricsToPush)
 			assert.NoError(t, err)
 
 			for url, called := range tt.expectedURLs {
