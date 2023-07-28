@@ -29,7 +29,7 @@ func (p *postgresDataBase) UpdateItems(ctx context.Context, records []*database.
 	return p.callInTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		for _, record := range records {
 			// statements for stored procedure are stored in a db
-			_, err := tx.ExecContext(ctx, "CALL UpdateOrCreateMetric(@metricType, @metricName, @metricValue)", pgx.NamedArgs{
+			_, err := tx.ExecContext(ctx, "CALL UpdateOrCreateMetric"+"(@metricType, @metricName, @metricValue)", pgx.NamedArgs{
 				"metricType":  record.MetricType.String,
 				"metricName":  record.Name.String,
 				"metricValue": record.Value.Float64})
