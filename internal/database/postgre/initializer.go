@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"sort"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 )
 
 var scripts = map[string]string{

@@ -122,7 +122,7 @@ func createConfig() (*config, error) {
 	flag.StringVar(&conf.Key, "k", "", "Signer secret key")
 	flag.BoolVar(&conf.Restore, "r", true, "Restore metric values from the server backup file")
 	flag.DurationVar(&conf.StoreInterval, "i", time.Second*300, "Store backup interval")
-	flag.StringVar(&conf.ServerURL, "a", "127.0.0.1:8080", "Server listen URL")
+	flag.StringVar(&conf.ServerURL, "a", "localhost:8080", "Server listen URL")
 	flag.StringVar(&conf.StoreFile, "f", "/tmp/devops-metrics-dataBase.json", "Backup storage file path")
 	flag.StringVar(&conf.DB, "d", "", "Database connection stirng")
 	flag.Parse()
