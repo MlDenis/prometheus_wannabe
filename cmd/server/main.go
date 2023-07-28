@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/html"
 	"github.com/MlDenis/prometheus_wannabe/internal/storage"
+	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
@@ -18,6 +20,10 @@ const (
 
 type metricInfoContextKey struct {
 	key string
+}
+
+type config struct {
+	ListenURL string
 }
 
 type metricInfo struct {
@@ -37,6 +43,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+}
+
+func createConfig() (*config, error) {
+	conf := &config{}
+	flag.StringVar(&conf.ListenURL, "a", "localhost:8080", "Server listen URL")
+	flag.Parse()
+
+	err := env.Parse(conf)
+	return conf, err
 }
 
 func initRouter(metricsStorage storage.MetricsStorage, htmlPageBuilder html.HTMLPageBuilder) *chi.Mux {

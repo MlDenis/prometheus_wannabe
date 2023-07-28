@@ -21,12 +21,12 @@ type httpMetricsAgent struct {
 	pushTimeout      time.Duration
 }
 
-func NewHTTPMetricsAgent(config MetricsAgentConfig) MetricAgent {
+func NewHTTPMetricsAgent(config MetricsAgentConfig) (MetricAgent, error) {
 	return &httpMetricsAgent{
 		client:           http.Client{},
 		metricsServerURL: strings.TrimRight(config.MetricsReceiverAddress(), "/"),
 		pushTimeout:      config.SendMetricsTimeout(),
-	}
+	}, nil
 }
 
 func (p *httpMetricsAgent) Send(ctx context.Context, metrics []metrics.Metric) error {
