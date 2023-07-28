@@ -7,6 +7,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
 	"sync"
 )
