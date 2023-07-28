@@ -13,10 +13,10 @@ import (
 )
 
 type config struct {
-	MetricReceiverAddress  string
-	SendTimeout            time.Duration
-	PollInterval           time.Duration
-	ReportInterval         time.Duration
+	MetricReceiverAddress  string        `env:"ADDRESS"`
+	SendTimeout            time.Duration `env:"SEND_TIMEOUT"`
+	PollInterval           time.Duration `env:"POLL_INTERVAL"`
+	ReportInterval         time.Duration `env:"REPORT_INTERVAL"`
 	ListOfCollectedMetrics []string
 }
 

@@ -22,7 +22,7 @@ type metricInfoContextKey struct {
 }
 
 type config struct {
-	ListenURL string
+	ListenURL string `env:"ADDRESS"`
 }
 
 type metricInfo struct {
