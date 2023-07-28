@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/html"
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/storage"
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
@@ -35,10 +36,9 @@ func main() {
 	cfg, err := createConfig()
 
 	if err != nil {
-		fmt.Printf("Fail to create config file: %v", err.Error())
-		panic(err)
+		panic(logger.WrapError("Fail to create config file: %v", err))
 	}
-	fmt.Printf("Starting server with the following configuration:%v", cfg)
+	logger.InfoFormat("Starting server with the following configuration:%v", cfg)
 
 	inMemoryStorage := storage.NewInMemoryStorage()
 	htmlPageBuilder := html.NewSimplePageBuilder()
@@ -72,7 +72,9 @@ func initRouter(metricsStorage storage.MetricsStorage, htmlPageBuilder html.HTML
 			r.Post("/", updateCounterMetric(metricsStorage))
 		})
 		r.Post("/{metricType}/{metricName}/{metricValue}", func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "Unknown metric type", http.StatusNotImplemented)
+			message := fmt.Sprintf("unknown metric type: %s", chi.URLParam(r, "metricType"))
+			logger.Error("Unknown metric type" + message)
+			http.Error(w, message, http.StatusNotImplemented)
 		})
 	})
 	router.Route("/value", func(r chi.Router) {
@@ -122,7 +124,7 @@ func updateGaugeMetric(storage storage.MetricsStorage) func(w http.ResponseWrite
 		storage.AddGaugeMetric(metricContext.metricName, value)
 
 		successResponse(w, "text/plain", "ok")
-		fmt.Printf("Updated metric: %v. value: %v", metricContext.metricName, metricContext.metricValue)
+		logger.InfoFormat("Updated metric: %v. newValue: %v", metricContext.metricName, metricContext.metricValue)
 	}
 }
 
@@ -144,7 +146,7 @@ func updateCounterMetric(storage storage.MetricsStorage) func(w http.ResponseWri
 		storage.AddCounterMetric(metricContext.metricName, value)
 
 		successResponse(w, "text/plain", "ok")
-		fmt.Printf("Updated metric: %v. value: %v", metricContext.metricName, metricContext.metricValue)
+		logger.InfoFormat("Updated metric: %v. newValue: %v", metricContext.metricName, metricContext.metricValue)
 	}
 }
 
@@ -153,6 +155,7 @@ func handleMetricValue(storage storage.MetricsStorage) func(w http.ResponseWrite
 		ctx := r.Context()
 		metricContext, ok := ctx.Value(metricInfoContextKey{key: metricInfoKey}).(*metricInfo)
 		if !ok {
+			logger.ErrorFormat("Fail to get metric value")
 			http.Error(w, "Metric info not found in context", http.StatusInternalServerError)
 			return
 		}
@@ -172,6 +175,6 @@ func successResponse(w http.ResponseWriter, contentType string, message string) 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
-		fmt.Printf("Response write failure: %v", err.Error())
+		logger.WrapError("Response write failure: %v", err).Error()
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"time"
 
 	"github.com/caarlos0/env/v7"
@@ -23,12 +24,12 @@ type config struct {
 func main() {
 	cfg, err := createConfig()
 	if err != nil {
-		panic(err)
+		panic(logger.WrapError("initialize config", err))
 	}
 
 	metricAgent, err := agent.NewHTTPMetricsAgent(cfg)
 	if err != nil {
-		panic(err)
+		panic(logger.WrapError("create new metrics pusher", err))
 	}
 
 	runtimeMetricsProvider := metrics.NewRuntimeMetricsProvider(cfg)
