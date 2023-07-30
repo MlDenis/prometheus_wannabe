@@ -16,7 +16,9 @@ func NewHardWorker(workFunc func(ctx context.Context) error) HardWorker {
 	}
 }
 
-func (w *HardWorker) StartWork(ctx context.Context, interval time.Duration) {
+func (w *HardWorker) StartWork(ctx context.Context, inv int) {
+	interval := time.Duration(inv) * time.Second
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {

@@ -17,12 +17,12 @@ import (
 )
 
 type config struct {
-	Key                   string        `env:"KEY"`
-	ServerURL             string        `env:"ADDRESS"`
-	PushRateLimit         int           `env:"RATE_LIMIT"`
-	PushTimeout           time.Duration `env:"PUSH_TIMEOUT"`
-	SendMetricsInterval   time.Duration `env:"REPORT_INTERVAL"`
-	UpdateMetricsInterval time.Duration `env:"POLL_INTERVAL"`
+	Key                   string `env:"KEY"`
+	ServerURL             string `env:"ADDRESS"`
+	PushRateLimit         int    `env:"RATE_LIMIT"`
+	PushTimeout           int    `env:"PUSH_TIMEOUT"`
+	SendMetricsInterval   int    `env:"REPORT_INTERVAL"`
+	UpdateMetricsInterval int    `env:"POLL_INTERVAL"`
 	CollectMetricsList    []string
 }
 
@@ -93,9 +93,9 @@ func createConfig() (*config, error) {
 	flag.StringVar(&conf.Key, "k", "", "Signer secret key")
 	flag.StringVar(&conf.ServerURL, "a", "localhost:8080", "Metrics server URL")
 	flag.IntVar(&conf.PushRateLimit, "l", 20, "Push metrics parallel workers limit")
-	flag.DurationVar(&conf.PushTimeout, "t", time.Second*10, "Push metrics timeout")
-	flag.DurationVar(&conf.SendMetricsInterval, "r", time.Second*10, "Send metrics interval")
-	flag.DurationVar(&conf.UpdateMetricsInterval, "p", time.Second*2, "Update metrics interval")
+	flag.IntVar(&conf.PushTimeout, "t", 10, "Push metrics timeout")
+	flag.IntVar(&conf.SendMetricsInterval, "r", 10, "Send metrics interval")
+	flag.IntVar(&conf.UpdateMetricsInterval, "p", 2, "Update metrics interval")
 	flag.Parse()
 
 	err := env.Parse(conf)
@@ -111,7 +111,7 @@ func (c *config) MetricsServerURL() string {
 }
 
 func (c *config) PushMetricsTimeout() time.Duration {
-	return c.PushTimeout
+	return time.Duration(c.PushTimeout)
 }
 
 func (c *config) ParallelLimit() int {
