@@ -2,10 +2,8 @@ package worker
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/test"
 )
@@ -20,7 +18,7 @@ func TestPeriodicWorker_CloseContext(t *testing.T) {
 	})
 
 	cancel()
-	worker.StartWork(ctx, 1*time.Millisecond)
+	worker.StartWork(ctx, 1)
 	assert.False(t, wasCalled)
 }
 
@@ -39,6 +37,6 @@ func TestPeriodicWorker_SuccessCall(t *testing.T) {
 		return nil
 	})
 
-	worker.StartWork(ctx, 1*time.Millisecond)
+	worker.StartWork(ctx, 1)
 	assert.True(t, wasCalled)
 }
