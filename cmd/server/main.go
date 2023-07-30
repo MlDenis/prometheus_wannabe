@@ -26,7 +26,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"io"
 	"net/http"
-	"time"
 )
 
 const (
@@ -53,12 +52,12 @@ type metricsRequestContext struct {
 }
 
 type config struct {
-	Key           string        `env:"KEY"`
-	ServerURL     string        `env:"ADDRESS"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL"`
-	StoreFile     string        `env:"STORE_FILE"`
-	Restore       bool          `env:"RESTORE"`
-	DB            string        `env:"DATABASE_DSN"`
+	Key           string `env:"KEY"`
+	ServerURL     string `env:"ADDRESS"`
+	StoreInterval int    `env:"STORE_INTERVAL"`
+	StoreFile     string `env:"STORE_FILE"`
+	Restore       bool   `env:"RESTORE"`
+	DB            string `env:"DATABASE_DSN"`
 }
 
 func main() {
@@ -121,7 +120,7 @@ func createConfig() (*config, error) {
 
 	flag.StringVar(&conf.Key, "k", "", "Signer secret key")
 	flag.BoolVar(&conf.Restore, "r", true, "Restore metric values from the server backup file")
-	flag.DurationVar(&conf.StoreInterval, "i", time.Second*300, "Store backup interval")
+	flag.IntVar(&conf.StoreInterval, "i", 300, "Store backup interval")
 	flag.StringVar(&conf.ServerURL, "a", "localhost:8080", "Server listen URL")
 	flag.StringVar(&conf.StoreFile, "f", "/tmp/metrics-db.json", "Backup storage file path")
 	flag.StringVar(&conf.DB, "d", "", "Database connection stirng")
