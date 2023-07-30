@@ -18,7 +18,7 @@ func TestPeriodicWorker_CloseContext(t *testing.T) {
 	})
 
 	cancel()
-	worker.StartWork(ctx, 1)
+	worker.StartWork(ctx, 1/1000)
 	assert.False(t, wasCalled)
 }
 
@@ -37,6 +37,6 @@ func TestPeriodicWorker_SuccessCall(t *testing.T) {
 		return nil
 	})
 
-	worker.StartWork(ctx, 1)
+	worker.StartWork(ctx, 1/1000)
 	assert.True(t, wasCalled)
 }
