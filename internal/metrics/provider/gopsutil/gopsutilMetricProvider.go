@@ -8,6 +8,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"runtime"
 	"time"
@@ -66,10 +67,10 @@ func (g *GopsutilMetricsProvider) updateMemoryMetrics(ctx context.Context) error
 	}
 
 	g.totalMetric.SetValue(float64(memoryStats.Total))
-	logger.InfoFormat("Updated metric: %v. value: %v", g.totalMetric.GetName(), g.totalMetric.GetStringValue())
+	logrus.Infof("Updated metric: %v. value: %v", g.totalMetric.GetName(), g.totalMetric.GetStringValue())
 
 	g.freeMetric.SetValue(float64(memoryStats.Free))
-	logger.InfoFormat("Updated metric: %v. value: %v", g.freeMetric.GetName(), g.freeMetric.GetStringValue())
+	logrus.Infof("Updated metric: %v. value: %v", g.freeMetric.GetName(), g.freeMetric.GetStringValue())
 
 	return nil
 }
@@ -83,7 +84,7 @@ func (g *GopsutilMetricsProvider) updateCPUMetrics(ctx context.Context) error {
 	for i, val := range cpuStats {
 		metric := g.cpuUtilizationMetrics[i]
 		metric.SetValue(val)
-		logger.InfoFormat("Updated metric: %v. value: %v", metric.GetName(), metric.GetStringValue())
+		logrus.Infof("Updated metric: %v. value: %v", metric.GetName(), metric.GetStringValue())
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package worker
 
 import (
 	"context"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -26,10 +26,10 @@ func (w *HardWorker) StartWork(ctx context.Context, inv int) {
 		case <-ticker.C:
 			err := w.workFunc(ctx)
 			if err != nil {
-				logger.ErrorFormat("periodic worker error: %v", err)
+				logrus.Errorf("periodic worker error: %v", err)
 			}
 		case <-ctx.Done():
-			logger.ErrorFormat("periodic worker canceled")
+			logrus.Errorf("periodic worker canceled")
 			return
 		}
 	}

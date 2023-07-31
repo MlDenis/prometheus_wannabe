@@ -2,9 +2,9 @@ package custom
 
 import (
 	"context"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 )
 
@@ -32,13 +32,13 @@ func (c *customMetricsProvider) GetMetrics() <-chan metrics.Metric {
 }
 
 func (c *customMetricsProvider) Update(context.Context) error {
-	logger.Info("Start collect custom metrics")
+	logrus.Info("Start collect custom metrics")
 
 	c.poolMetric.SetValue(1)
-	logger.InfoFormat("Updated metric: %v. value: %v", c.poolMetric.GetName(), c.poolMetric.GetStringValue())
+	logrus.Infof("Updated metric: %v. value: %v", c.poolMetric.GetName(), c.poolMetric.GetStringValue())
 
 	c.randomMetric.SetValue(rand.Float64())
-	logger.InfoFormat("Updated metric: %v. value: %v", c.randomMetric.GetName(), c.randomMetric.GetStringValue())
+	logrus.Infof("Updated metric: %v. value: %v", c.randomMetric.GetName(), c.randomMetric.GetStringValue())
 
 	return nil
 }

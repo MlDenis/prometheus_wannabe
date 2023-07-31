@@ -9,6 +9,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"net/http"
@@ -74,9 +75,9 @@ func (p *httpMetricsPusher) Push(ctx context.Context, metricsChan <-chan metrics
 func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metrics.Metric) error {
 	metricsCount := len(metricsList)
 	if metricsCount == 0 {
-		logger.Info("Nothing to push")
+		logrus.Info("Nothing to push")
 	}
-	logger.InfoFormat("Push %v metrics", metricsCount)
+	logrus.Infof("Push %v metrics", metricsCount)
 
 	pushCtx, cancel := context.WithTimeout(ctx, p.pushTimeout)
 	defer cancel()
@@ -117,12 +118,12 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 
 	stringContent := string(content)
 	if response.StatusCode != http.StatusOK {
-		logger.ErrorFormat("Unexpected response status code: %v %v", response.Status, stringContent)
+		logrus.Errorf("Unexpected response status code: %v %v", response.Status, stringContent)
 		return logger.WrapError(fmt.Sprintf("push metric: %s", stringContent), metrics.ErrUnexpectedStatusCode)
 	}
 
 	for _, metric := range metricsList {
-		logger.InfoFormat("Pushed metric: %v. value: %v, status: %v", metric.GetName(), metric.GetStringValue(), response.Status)
+		logrus.Infof("Pushed metric: %v. value: %v, status: %v", metric.GetName(), metric.GetStringValue(), response.Status)
 		metric.JumpToTheOriginalState()
 	}
 

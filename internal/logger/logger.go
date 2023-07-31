@@ -2,23 +2,22 @@ package logger
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"log"
 )
 
-func Info(message string) {
-	log.Printf("[INFO]: %v\r\n", message)
-}
+const (
+	LogDebug = "debug"
+	LogInfo  = "info"
+)
 
-func InfoFormat(format string, v ...any) {
-	Info(fmt.Sprintf(format, v...))
-}
-
-func Warn(message string) {
-	log.Printf("[WARN]: %v\r\n", message)
-}
-
-func WarnFormat(format string, v ...any) {
-	Warn(fmt.Sprintf(format, v...))
+func InitLogger(debugLevel string) {
+	switch debugLevel {
+	case LogInfo:
+		logrus.SetLevel(logrus.InfoLevel)
+	case LogDebug:
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 }
 
 func Error(message string) {

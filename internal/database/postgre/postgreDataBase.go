@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/jackc/pgx/v5"
+	"github.com/sirupsen/logrus"
 )
 
 type PostgresDataaBaseConfig interface {
@@ -69,7 +69,7 @@ func (p *postgresDataBase) ReadItem(ctx context.Context, metricType string, metr
 	}
 
 	if count > 1 {
-		logger.ErrorFormat("More than one metric in logical primary key: %v, %v", metricType, metricName)
+		logrus.Errorf("More than one metric in logical primary key: %v, %v", metricType, metricName)
 	}
 
 	return result[0], nil
@@ -112,7 +112,7 @@ func (p *postgresDataBase) callInTransactionResult(ctx context.Context, action f
 	if err != nil {
 		rollbackError := tx.Rollback()
 		if rollbackError != nil {
-			logger.ErrorFormat("Fail to rollback transaction: %v", rollbackError)
+			logrus.Errorf("Fail to rollback transaction: %v", rollbackError)
 		}
 
 		return nil, err
@@ -120,7 +120,7 @@ func (p *postgresDataBase) callInTransactionResult(ctx context.Context, action f
 
 	err = tx.Commit()
 	if err != nil {
-		logger.ErrorFormat("Fail to commit transaction: %v", err)
+		logrus.Errorf("Fail to commit transaction: %v", err)
 		return nil, err
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"sync"
@@ -40,10 +41,10 @@ func NewFileStorage(config fileStorageConfig) storage.MetricsStorage {
 	}
 
 	if _, err := os.Stat(result.filePath); err != nil && result.filePath != "" && errors.Is(err, os.ErrNotExist) {
-		logger.InfoFormat("Init storage file in %v", result.filePath)
+		logrus.Infof("Init storage file in %v", result.filePath)
 		err = result.writeRecordsToFile(storageRecords{})
 		if err != nil {
-			logger.ErrorFormat("failed to init storage file: %v", err)
+			logrus.Errorf("failed to init storage file: %v", err)
 		}
 	}
 
@@ -204,7 +205,7 @@ func (f *fileStorage) workWithFileResult(flag int, work func(file *os.File) (sto
 	defer func(fileStream *os.File) {
 		err = fileStream.Close()
 		if err != nil {
-			logger.ErrorFormat("failed to close file: %v", err)
+			logrus.Errorf("failed to close file: %v", err)
 		}
 	}(fileStream)
 

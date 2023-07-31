@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"sort"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -74,7 +75,7 @@ var scripts = map[string]string{
 }
 
 func initDB(ctx context.Context, connectionString string) (*sql.DB, error) {
-	logger.Info("Initialize database schema")
+	logrus.Info("Initialize database schema")
 
 	conn, err := sql.Open("pgx", connectionString)
 	if err != nil {
@@ -96,7 +97,7 @@ func initDB(ctx context.Context, connectionString string) (*sql.DB, error) {
 
 	for _, commandName := range commandNames {
 		command := scripts[commandName]
-		logger.InfoFormat("Invoke %s", commandName)
+		logrus.Infof("Invoke %s", commandName)
 		_, err = conn.ExecContext(ctx, command)
 		if err != nil {
 			return nil, logger.WrapError(fmt.Sprintf("invoke %s", commandName), err)

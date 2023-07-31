@@ -5,6 +5,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+	"github.com/sirupsen/logrus"
 )
 
 type UnknownMetricTypeError struct {
@@ -45,7 +46,7 @@ func (c *MetricsConverter) ToModelMetric(metric metrics.Metric) (*Metrics, error
 	case "gauge":
 		modelMetric.Value = &metricValue
 	default:
-		logger.ErrorFormat("unknown metric type: %v", modelMetric.MType)
+		logrus.Errorf("unknown metric type: %v", modelMetric.MType)
 		return nil, &UnknownMetricTypeError{UnknownType: modelMetric.MType}
 	}
 
@@ -81,7 +82,7 @@ func (c *MetricsConverter) FromModelMetric(modelMetric *Metrics) (metrics.Metric
 		metric = types.NewGaugeMetric(modelMetric.ID)
 		value = *modelMetric.Value
 	default:
-		logger.ErrorFormat("unknown metric type: %v", modelMetric.MType)
+		logrus.Errorf("unknown metric type: %v", modelMetric.MType)
 		return nil, &UnknownMetricTypeError{UnknownType: modelMetric.MType}
 	}
 

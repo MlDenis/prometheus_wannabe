@@ -6,6 +6,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"runtime"
 )
@@ -29,7 +30,7 @@ func NewRuntimeMetricsProvider(config runtimeMetricsProviderConfig) metrics.Metr
 }
 
 func (p *runtimeMetricsProvider) Update(context.Context) error {
-	logger.Info("Start collect runtime metrics")
+	logrus.Info("Start collect runtime metrics")
 	stats := runtime.MemStats{}
 	runtime.ReadMemStats(&stats)
 
@@ -41,7 +42,7 @@ func (p *runtimeMetricsProvider) Update(context.Context) error {
 		}
 
 		metric.SetValue(metricValue)
-		logger.InfoFormat("Updated metric: %v. value: %v", metricName, metric.GetStringValue())
+		logrus.Infof("Updated metric: %v. value: %v", metricName, metric.GetStringValue())
 	}
 
 	return nil

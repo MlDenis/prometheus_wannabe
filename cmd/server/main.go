@@ -24,6 +24,7 @@ import (
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 )
@@ -52,12 +53,13 @@ type metricsRequestContext struct {
 }
 
 type config struct {
-	Key           string `env:"KEY"`
-	ServerURL     string `env:"ADDRESS"`
-	StoreInterval int    `env:"STORE_INTERVAL"`
-	StoreFile     string `env:"STORE_FILE"`
-	Restore       bool   `env:"RESTORE"`
-	DB            string `env:"DATABASE_DSN"`
+	Key           string    `env:"KEY"`
+	ServerURL     string    `env:"ADDRESS"`
+	StoreInterval int       `env:"STORE_INTERVAL"`
+	StoreFile     string    `env:"STORE_FILE"`
+	Restore       bool      `env:"RESTORE"`
+	DB            string    `env:"DATABASE_DSN"`
+	LogLevel      log.Level `env:"LOG_LEVEL"`
 }
 
 func main() {
@@ -68,7 +70,10 @@ func main() {
 	if err != nil {
 		panic(logger.WrapError("create config file", err))
 	}
-	logger.InfoFormat("Starting server with the following configuration:%v", conf)
+
+	logger.InitLogger(fmt.Sprint(conf.LogLevel))
+
+	log.Infof("Starting server with the following configuration:%v", conf)
 
 	var base database.DataBase
 	var backupStorage storage.MetricsStorage
@@ -95,23 +100,23 @@ func main() {
 	router := initRouter(storageStrategy, converter, htmlPageBuilder, base)
 
 	if conf.Restore {
-		logger.Info("Restore metrics from backup")
+		log.Error("Restore metrics from backup")
 		err = storageStrategy.RestoreFromBackup(ctx)
 		if err != nil {
-			logger.ErrorFormat("failed to restore state from backup: %v", err)
+			log.Errorf("failed to restore state from backup: %v", err)
 		}
 	}
 
 	if !conf.SyncMode() {
-		logger.Info("Start periodic backup serice")
+		log.Infof("Start periodic backup serice")
 		backgroundStore := worker.NewHardWorker(func(ctx context.Context) error { return storageStrategy.CreateBackup(ctx) })
 		go backgroundStore.StartWork(ctx, conf.StoreInterval)
 	}
 
-	logger.Info("Start listen " + conf.ServerURL)
+	log.Infof("Start listen " + conf.ServerURL)
 	err = http.ListenAndServe(conf.ServerURL, router)
 	if err != nil {
-		logger.ErrorObj(err)
+		log.Error(err)
 	}
 }
 
@@ -143,7 +148,7 @@ func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsC
 			Post("/counter/{metricName}/{metricValue}", successURLResponse())
 		r.Post("/{metricType}/{metricName}/{metricValue}", func(w http.ResponseWriter, r *http.Request) {
 			message := fmt.Sprintf("unknown metric type: %s", chi.URLParam(r, "metricType"))
-			logger.Error("failed to update metric: " + message)
+			log.Error("failed to update metric: " + message)
 			http.Error(w, message, http.StatusNotImplemented)
 		})
 	})
@@ -189,7 +194,7 @@ func fillGaugeURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
 		if len(metricsContext.requestMetrics) != 1 {
-			logger.Error("fillGaugeURLContext: wrong context")
+			log.Error("fillGaugeURLContext: wrong context")
 			http.Error(w, "fillGaugeURLContext: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -211,7 +216,7 @@ func fillCounterURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
 		if len(metricsContext.requestMetrics) != 1 {
-			logger.Error("fillCounterURLContext: wrong context")
+			log.Error("fillCounterURLContext: wrong context")
 			http.Error(w, "fillCounterURLContext: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -255,13 +260,13 @@ func fillSingleJSONContext(next http.Handler) http.Handler {
 		}
 
 		if metricContext.ID == "" {
-			logger.Error("Fail to collect json context: metric name is missed")
+			log.Error("Fail to collect json context: metric name is missed")
 			http.Error(w, "metric name is missed", http.StatusBadRequest)
 			return
 		}
 
 		if metricContext.MType == "" {
-			logger.Error("Fail to collect json context: metric type is missed")
+			log.Error("Fail to collect json context: metric type is missed")
 			http.Error(w, "metric types is missed", http.StatusBadRequest)
 			return
 		}
@@ -295,13 +300,13 @@ func fillMultiJSONContext(next http.Handler) http.Handler {
 
 		for _, requestMetric := range metricsContext.requestMetrics {
 			if requestMetric.ID == "" {
-				logger.Error("Fail to collect json context: metric name is missed")
+				log.Error("Fail to collect json context: metric name is missed")
 				http.Error(w, "metric name is missed", http.StatusBadRequest)
 				return
 			}
 
 			if requestMetric.MType == "" {
-				logger.Error("Fail to collect json context: metric type is missed")
+				log.Error("Fail to collect json context: metric type is missed")
 				http.Error(w, "metric types is missed", http.StatusBadRequest)
 				return
 			}
@@ -319,7 +324,7 @@ func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConve
 			for i, metricContext := range metricsContext.requestMetrics {
 				metric, err := converter.FromModelMetric(metricContext)
 				if err != nil {
-					logger.ErrorFormat("Fail to parse metric: %v", err)
+					log.Errorf("Fail to parse metric: %v", err)
 
 					var errUnknownMetricType *model.UnknownMetricTypeError
 					if errors.As(err, &errUnknownMetricType) {
@@ -347,7 +352,7 @@ func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConve
 					return
 				}
 
-				logger.InfoFormat("Updated metric: %v. newValue: %v", resultMetric.GetName(), newValue)
+				log.Errorf("Updated metric: %v. newValue: %v", resultMetric.GetName(), newValue)
 				metricsContext.resultMetrics[i] = newValue
 			}
 
@@ -364,7 +369,7 @@ func fillMetricValues(storage storage.MetricsStorage, converter *model.MetricsCo
 			for i, metricContext := range metricsContext.requestMetrics {
 				metric, err := storage.GetMetric(ctx, metricContext.MType, metricContext.ID)
 				if err != nil {
-					logger.ErrorFormat("Fail to get metric value: %v", err)
+					log.Errorf("Fail to get metric value: %v", err)
 					http.Error(w, "Metric not found", http.StatusNotFound)
 					return
 				}
@@ -388,7 +393,7 @@ func successURLValueResponse(converter *model.MetricsConverter) func(w http.Resp
 		_, metricsContext := ensureMetricsContext(r)
 
 		if len(metricsContext.resultMetrics) != 1 {
-			logger.Error("successURLValueResponse: wrong context")
+			log.Error("successURLValueResponse: wrong context")
 			http.Error(w, "successURLValueResponse: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -425,7 +430,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		_, metricsContext := ensureMetricsContext(r)
 
 		if len(metricsContext.resultMetrics) != 1 {
-			logger.Error("successSingleJSONResponse: wrong context")
+			log.Error("successSingleJSONResponse: wrong context")
 			http.Error(w, "successSingleJSONResponse: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -440,7 +445,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(result)
 		if err != nil {
-			logger.ErrorFormat("failed to write response: %v", err)
+			log.Errorf("failed to write response: %v", err)
 		}
 	}
 }
@@ -459,7 +464,7 @@ func successMultiJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(result)
 		if err != nil {
-			logger.ErrorFormat("failed to write response: %v", err)
+			log.Errorf("failed to write response: %v", err)
 		}
 	}
 }
@@ -469,7 +474,7 @@ func successResponse(w http.ResponseWriter, contentType string, message string) 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
-		logger.ErrorFormat("failed to write response: %v", err)
+		log.Errorf("failed to write response: %v", err)
 	}
 }
 

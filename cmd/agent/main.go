@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/MlDenis/prometheus_wannabe/internal/hash"
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
@@ -13,24 +14,29 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler/http"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
 	"github.com/caarlos0/env/v7"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type config struct {
-	Key                   string `env:"KEY"`
-	ServerURL             string `env:"ADDRESS"`
-	PushRateLimit         int    `env:"RATE_LIMIT"`
-	PushTimeout           int    `env:"PUSH_TIMEOUT"`
-	SendMetricsInterval   int    `env:"REPORT_INTERVAL"`
-	UpdateMetricsInterval int    `env:"POLL_INTERVAL"`
+	Key                   string    `env:"KEY"`
+	ServerURL             string    `env:"ADDRESS"`
+	PushRateLimit         int       `env:"RATE_LIMIT"`
+	PushTimeout           int       `env:"PUSH_TIMEOUT"`
+	SendMetricsInterval   int       `env:"REPORT_INTERVAL"`
+	UpdateMetricsInterval int       `env:"POLL_INTERVAL"`
+	LogLevel              log.Level `env:"LOG_LEVEL"`
 	CollectMetricsList    []string
 }
 
 func main() {
+
 	conf, err := createConfig()
 	if err != nil {
 		panic(logger.WrapError("initialize config", err))
 	}
+
+	logger.InitLogger(fmt.Sprint(conf.LogLevel))
 
 	signer := hash.NewSigner(conf)
 	converter := model.NewMetricsConverter(conf, signer)
