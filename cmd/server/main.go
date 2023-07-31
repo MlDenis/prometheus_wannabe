@@ -447,10 +447,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 
 func successMultiJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// _, metricsContext := ensureMetricsContext(r)
-		// metricsContext.resultMetrics <-- update results
 
-		// just a stub, maybe temporary
 		stubResult := &model.Metrics{}
 		result, err := json.Marshal(stubResult)
 		if err != nil {
