@@ -7,6 +7,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/database/postgre"
@@ -24,9 +27,7 @@ import (
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	log "github.com/sirupsen/logrus"
-	"io"
-	"net/http"
+	"go.uber.org/zap"
 )
 
 const (
@@ -53,13 +54,13 @@ type metricsRequestContext struct {
 }
 
 type config struct {
-	Key           string    `env:"KEY"`
-	ServerURL     string    `env:"ADDRESS"`
-	StoreInterval int       `env:"STORE_INTERVAL"`
-	StoreFile     string    `env:"STORE_FILE"`
-	Restore       bool      `env:"RESTORE"`
-	DB            string    `env:"DATABASE_DSN"`
-	LogLevel      log.Level `env:"LOG_LEVEL"`
+	Key           string          `env:"KEY"`
+	ServerURL     string          `env:"ADDRESS"`
+	StoreInterval int             `env:"STORE_INTERVAL"`
+	StoreFile     string          `env:"STORE_FILE"`
+	Restore       bool            `env:"RESTORE"`
+	DB            string          `env:"DATABASE_DSN"`
+	LogLevel      zap.AtomicLevel `env:"LOG_LEVEL"`
 }
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 
 	logger.InitLogger(fmt.Sprint(conf.LogLevel))
 
-	log.Infof("Starting server with the following configuration:%v", conf)
+	logger.SugarLogger.Infof("Starting server with the following configuration:%v", conf)
 
 	var base database.DataBase
 	var backupStorage storage.MetricsStorage
@@ -100,23 +101,23 @@ func main() {
 	router := initRouter(storageStrategy, converter, htmlPageBuilder, base)
 
 	if conf.Restore {
-		log.Error("Restore metrics from backup")
+		logger.SugarLogger.Error("Restore metrics from backup")
 		err = storageStrategy.RestoreFromBackup(ctx)
 		if err != nil {
-			log.Errorf("failed to restore state from backup: %v", err)
+			logger.SugarLogger.Errorf("failed to restore state from backup: %v", err)
 		}
 	}
 
 	if !conf.SyncMode() {
-		log.Infof("Start periodic backup serice")
+		logger.SugarLogger.Infof("Start periodic backup serice")
 		backgroundStore := worker.NewHardWorker(func(ctx context.Context) error { return storageStrategy.CreateBackup(ctx) })
 		go backgroundStore.StartWork(ctx, conf.StoreInterval)
 	}
 
-	log.Infof("Start listen " + conf.ServerURL)
+	logger.SugarLogger.Infof("Start listen " + conf.ServerURL)
 	err = http.ListenAndServe(conf.ServerURL, router)
 	if err != nil {
-		log.Error(err)
+		logger.SugarLogger.Error(err)
 	}
 }
 
@@ -148,7 +149,7 @@ func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsC
 			Post("/counter/{metricName}/{metricValue}", successURLResponse())
 		r.Post("/{metricType}/{metricName}/{metricValue}", func(w http.ResponseWriter, r *http.Request) {
 			message := fmt.Sprintf("unknown metric type: %s", chi.URLParam(r, "metricType"))
-			log.Error("failed to update metric: " + message)
+			logger.SugarLogger.Error("failed to update metric: " + message)
 			http.Error(w, message, http.StatusNotImplemented)
 		})
 	})
@@ -194,7 +195,7 @@ func fillGaugeURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
 		if len(metricsContext.requestMetrics) != 1 {
-			log.Error("fillGaugeURLContext: wrong context")
+			logger.SugarLogger.Error("fillGaugeURLContext: wrong context")
 			http.Error(w, "fillGaugeURLContext: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -216,7 +217,7 @@ func fillCounterURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
 		if len(metricsContext.requestMetrics) != 1 {
-			log.Error("fillCounterURLContext: wrong context")
+			logger.SugarLogger.Error("fillCounterURLContext: wrong context")
 			http.Error(w, "fillCounterURLContext: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -260,13 +261,13 @@ func fillSingleJSONContext(next http.Handler) http.Handler {
 		}
 
 		if metricContext.ID == "" {
-			log.Error("Fail to collect json context: metric name is missed")
+			logger.SugarLogger.Error("Fail to collect json context: metric name is missed")
 			http.Error(w, "metric name is missed", http.StatusBadRequest)
 			return
 		}
 
 		if metricContext.MType == "" {
-			log.Error("Fail to collect json context: metric type is missed")
+			logger.SugarLogger.Error("Fail to collect json context: metric type is missed")
 			http.Error(w, "metric types is missed", http.StatusBadRequest)
 			return
 		}
@@ -300,13 +301,13 @@ func fillMultiJSONContext(next http.Handler) http.Handler {
 
 		for _, requestMetric := range metricsContext.requestMetrics {
 			if requestMetric.ID == "" {
-				log.Error("Fail to collect json context: metric name is missed")
+				logger.SugarLogger.Error("Fail to collect json context: metric name is missed")
 				http.Error(w, "metric name is missed", http.StatusBadRequest)
 				return
 			}
 
 			if requestMetric.MType == "" {
-				log.Error("Fail to collect json context: metric type is missed")
+				logger.SugarLogger.Error("Fail to collect json context: metric type is missed")
 				http.Error(w, "metric types is missed", http.StatusBadRequest)
 				return
 			}
@@ -324,7 +325,7 @@ func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConve
 			for i, metricContext := range metricsContext.requestMetrics {
 				metric, err := converter.FromModelMetric(metricContext)
 				if err != nil {
-					log.Errorf("Fail to parse metric: %v", err)
+					logger.SugarLogger.Errorf("Fail to parse metric: %v", err)
 
 					var errUnknownMetricType *model.UnknownMetricTypeError
 					if errors.As(err, &errUnknownMetricType) {
@@ -352,7 +353,7 @@ func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConve
 					return
 				}
 
-				log.Errorf("Updated metric: %v. newValue: %v", resultMetric.GetName(), newValue)
+				logger.SugarLogger.Errorf("Updated metric: %v. newValue: %v", resultMetric.GetName(), newValue)
 				metricsContext.resultMetrics[i] = newValue
 			}
 
@@ -369,7 +370,7 @@ func fillMetricValues(storage storage.MetricsStorage, converter *model.MetricsCo
 			for i, metricContext := range metricsContext.requestMetrics {
 				metric, err := storage.GetMetric(ctx, metricContext.MType, metricContext.ID)
 				if err != nil {
-					log.Errorf("Fail to get metric value: %v", err)
+					logger.SugarLogger.Errorf("Fail to get metric value: %v", err)
 					http.Error(w, "Metric not found", http.StatusNotFound)
 					return
 				}
@@ -393,7 +394,7 @@ func successURLValueResponse(converter *model.MetricsConverter) func(w http.Resp
 		_, metricsContext := ensureMetricsContext(r)
 
 		if len(metricsContext.resultMetrics) != 1 {
-			log.Error("successURLValueResponse: wrong context")
+			logger.SugarLogger.Error("successURLValueResponse: wrong context")
 			http.Error(w, "successURLValueResponse: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -430,7 +431,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		_, metricsContext := ensureMetricsContext(r)
 
 		if len(metricsContext.resultMetrics) != 1 {
-			log.Error("successSingleJSONResponse: wrong context")
+			logger.SugarLogger.Error("successSingleJSONResponse: wrong context")
 			http.Error(w, "successSingleJSONResponse: wrong context", http.StatusInternalServerError)
 			return
 		}
@@ -445,7 +446,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(result)
 		if err != nil {
-			log.Errorf("failed to write response: %v", err)
+			logger.SugarLogger.Errorf("failed to write response: %v", err)
 		}
 	}
 }
@@ -464,7 +465,7 @@ func successMultiJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(result)
 		if err != nil {
-			log.Errorf("failed to write response: %v", err)
+			logger.SugarLogger.Errorf("failed to write response: %v", err)
 		}
 	}
 }
@@ -474,7 +475,7 @@ func successResponse(w http.ResponseWriter, contentType string, message string) 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
-		log.Errorf("failed to write response: %v", err)
+		logger.SugarLogger.Errorf("failed to write response: %v", err)
 	}
 }
 
