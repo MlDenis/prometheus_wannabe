@@ -119,6 +119,8 @@ func main() {
 	if err != nil {
 		logger.SugarLogger.Error(err)
 	}
+
+	logger.SugarLogger.Sync()
 }
 
 func createConfig() (*config, error) {
