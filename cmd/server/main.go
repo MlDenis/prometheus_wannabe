@@ -27,7 +27,6 @@ import (
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"go.uber.org/zap"
 )
 
 const (
@@ -51,16 +50,6 @@ type metricInfoContextKey struct {
 type metricsRequestContext struct {
 	requestMetrics []*model.Metrics
 	resultMetrics  []*model.Metrics
-}
-
-type config struct {
-	Key           string          `env:"KEY"`
-	ServerURL     string          `env:"ADDRESS"`
-	StoreInterval int             `env:"STORE_INTERVAL"`
-	StoreFile     string          `env:"STORE_FILE"`
-	Restore       bool            `env:"RESTORE"`
-	DB            string          `env:"DATABASE_DSN"`
-	LogLevel      zap.AtomicLevel `env:"LOG_LEVEL"`
 }
 
 func main() {

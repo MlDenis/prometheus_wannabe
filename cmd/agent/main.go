@@ -14,20 +14,8 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler/http"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
 	"github.com/caarlos0/env/v7"
-	log "github.com/sirupsen/logrus"
 	"time"
 )
-
-type config struct {
-	Key                   string    `env:"KEY"`
-	ServerURL             string    `env:"ADDRESS"`
-	PushRateLimit         int       `env:"RATE_LIMIT"`
-	PushTimeout           int       `env:"PUSH_TIMEOUT"`
-	SendMetricsInterval   int       `env:"REPORT_INTERVAL"`
-	UpdateMetricsInterval int       `env:"POLL_INTERVAL"`
-	LogLevel              log.Level `env:"LOG_LEVEL"`
-	CollectMetricsList    []string
-}
 
 func main() {
 
