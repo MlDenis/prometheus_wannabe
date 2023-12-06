@@ -59,10 +59,10 @@ func getOrCreateMetricID(ctx context.Context, conn *sql.DB, metricTypeName strin
 }
 
 func updateOrCreateMetric(ctx context.Context, conn *sql.DB, metricTypeName string, metricName string, metricValue float64) error {
-	metricId, err := getOrCreateMetricID(ctx, conn, metricTypeName, metricName)
+	metricID, err := getOrCreateMetricID(ctx, conn, metricTypeName, metricName)
 	if err != nil {
 		return err
 	}
-	_, err = conn.ExecContext(ctx, "UPDATE metric SET value = $1 WHERE id = $2", metricValue, metricId)
+	_, err = conn.ExecContext(ctx, "UPDATE metric SET value = $1 WHERE id = $2", metricValue, metricID)
 	return err
 }
