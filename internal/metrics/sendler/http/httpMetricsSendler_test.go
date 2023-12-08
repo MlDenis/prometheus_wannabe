@@ -238,7 +238,7 @@ func (t *testMetric) SetValue(value float64) float64 {
 	return value
 }
 
-func (t *testMetric) JumpToTheOriginalState() {
+func (t *testMetric) ResetState() {
 }
 
 func (t *testMetric) GetHash(hash.Hash) ([]byte, error) {

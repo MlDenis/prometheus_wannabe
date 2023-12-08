@@ -43,7 +43,7 @@ func (m *gaugeMetric) SetValue(value float64) float64 {
 	return m.value
 }
 
-func (m *gaugeMetric) JumpToTheOriginalState() {
+func (m *gaugeMetric) ResetState() {
 }
 
 func (m *gaugeMetric) GetHash(hash hash.Hash) ([]byte, error) {

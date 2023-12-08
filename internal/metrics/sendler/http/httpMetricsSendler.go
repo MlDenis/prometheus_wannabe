@@ -126,7 +126,7 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 
 	for _, metric := range metricsList {
 		logrus.Infof("Pushed metric: %v. value: %v, status: %v", metric.GetName(), metric.GetStringValue(), response.Status)
-		metric.JumpToTheOriginalState()
+		metric.ResetState()
 	}
 
 	return nil

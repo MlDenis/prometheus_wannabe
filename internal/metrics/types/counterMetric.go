@@ -41,7 +41,7 @@ func (m *counterMetric) SetValue(value float64) float64 {
 	return m.setValue(m.value + int64(value))
 }
 
-func (m *counterMetric) JumpToTheOriginalState() {
+func (m *counterMetric) ResetState() {
 	m.setValue(0)
 }
 

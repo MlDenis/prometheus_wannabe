@@ -10,5 +10,5 @@ type Metric interface {
 	GetValue() float64
 	GetStringValue() string
 	SetValue(value float64) float64
-	JumpToTheOriginalState()
+	ResetState()
 }
