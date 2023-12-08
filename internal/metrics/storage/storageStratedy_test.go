@@ -2,11 +2,13 @@ package storage
 
 import (
 	"context"
+	"testing"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 type configMock struct {

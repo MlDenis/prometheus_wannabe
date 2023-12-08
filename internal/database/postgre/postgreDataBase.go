@@ -3,6 +3,7 @@ package postgre
 import (
 	"context"
 	"database/sql"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"

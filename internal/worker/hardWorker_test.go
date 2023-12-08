@@ -2,10 +2,11 @@ package worker
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPeriodicWorker_CloseContext(t *testing.T) {

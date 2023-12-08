@@ -24,6 +24,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/file"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/memory"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
+
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

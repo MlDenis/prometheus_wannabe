@@ -3,11 +3,11 @@ package postgre
 import (
 	"context"
 	"database/sql"
-	"github.com/sirupsen/logrus"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/sirupsen/logrus"
 )
 
 func initDB(ctx context.Context, connectionString string) (*sql.DB, error) {

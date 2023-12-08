@@ -2,9 +2,11 @@ package runtime
 
 import (
 	"context"
-	"github.com/MlDenis/prometheus_wannabe/internal/test"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type config struct {

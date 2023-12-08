@@ -2,10 +2,12 @@ package memory
 
 import (
 	"context"
+	"testing"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInMemoryStorage_AddCounterMetricValue(t *testing.T) {

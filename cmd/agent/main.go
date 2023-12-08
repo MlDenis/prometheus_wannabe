@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/config"
 	"github.com/MlDenis/prometheus_wannabe/internal/hash"
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
@@ -14,6 +15,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/provider/runtime"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler/http"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
+
 	"github.com/caarlos0/env/v7"
 )
 

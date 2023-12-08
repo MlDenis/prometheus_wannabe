@@ -3,11 +3,13 @@ package file
 import (
 	"context"
 	"encoding/json"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"github.com/MlDenis/prometheus_wannabe/internal/test"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
+	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type config struct {

@@ -3,12 +3,14 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"runtime"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+
 	"github.com/sirupsen/logrus"
-	"reflect"
-	"runtime"
 )
 
 type runtimeMetricsProviderConfig interface {

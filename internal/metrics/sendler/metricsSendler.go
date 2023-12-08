@@ -2,6 +2,7 @@ package sendler
 
 import (
 	"context"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 )
 

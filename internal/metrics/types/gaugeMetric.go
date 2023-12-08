@@ -2,9 +2,10 @@ package types
 
 import (
 	"fmt"
+	"hash"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"hash"
 )
 
 type gaugeMetric struct {

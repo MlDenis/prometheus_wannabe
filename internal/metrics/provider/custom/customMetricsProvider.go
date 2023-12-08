@@ -2,10 +2,12 @@ package custom
 
 import (
 	"context"
+	"math/rand"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+
 	"github.com/sirupsen/logrus"
-	"math/rand"
 )
 
 type customMetricsProvider struct {

@@ -3,15 +3,17 @@ package gopsutil
 import (
 	"context"
 	"fmt"
+	"runtime"
+	"time"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
-	"runtime"
-	"time"
 )
 
 var cpuInterval = 100 * time.Millisecond

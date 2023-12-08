@@ -2,8 +2,9 @@ package worker
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type HardWorker struct {

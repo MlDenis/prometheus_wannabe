@@ -3,19 +3,21 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"github.com/MlDenis/prometheus_wannabe/internal/converter"
-	internalHash "github.com/MlDenis/prometheus_wannabe/internal/hash"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
-	"github.com/MlDenis/prometheus_wannabe/internal/test"
-	"github.com/stretchr/testify/assert"
 	"hash"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/converter"
+	internalHash "github.com/MlDenis/prometheus_wannabe/internal/hash"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
+	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testConf struct {
