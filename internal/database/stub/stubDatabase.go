@@ -9,17 +9,14 @@ import (
 type StubDataBase struct{}
 
 func (s *StubDataBase) UpdateItems(context.Context, []*database.DBItem) error {
-	// TODO: implement
 	return nil
 }
 
 func (s *StubDataBase) ReadItem(context.Context, string, string) (*database.DBItem, error) {
-	// TODO: implement
 	return nil, nil
 }
 
 func (s *StubDataBase) ReadAllItems(context.Context) ([]*database.DBItem, error) {
-	// TODO: implement
 	return nil, nil
 }
 

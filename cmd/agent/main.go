@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/config"
 	"github.com/MlDenis/prometheus_wannabe/internal/hash"
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
@@ -14,7 +15,6 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler/http"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
 	"github.com/caarlos0/env/v7"
-	"time"
 )
 
 func main() {
@@ -53,8 +53,8 @@ func main() {
 	pushMetricsWorker.StartWork(ctx, conf.SendMetricsInterval)
 }
 
-func createConfig() (*config, error) {
-	conf := &config{CollectMetricsList: []string{
+func createConfig() (*config.Config, error) {
+	conf := &config.Config{CollectMetricsList: []string{
 		"Alloc",
 		"BuckHashSys",
 		"Frees",
@@ -94,28 +94,4 @@ func createConfig() (*config, error) {
 
 	err := env.Parse(conf)
 	return conf, err
-}
-
-func (c *config) MetricsList() []string {
-	return c.CollectMetricsList
-}
-
-func (c *config) MetricsServerURL() string {
-	return c.ServerURL
-}
-
-func (c *config) PushMetricsTimeout() time.Duration {
-	return time.Duration(c.PushTimeout) * time.Second
-}
-
-func (c *config) ParallelLimit() int {
-	return c.PushRateLimit
-}
-
-func (c *config) GetKey() []byte {
-	return []byte(c.Key)
-}
-
-func (c *config) SignMetrics() bool {
-	return c.Key != ""
 }
