@@ -36,18 +36,20 @@ func (p *runtimeMetricsProvider) Update(context.Context) error {
 	stats := runtime.MemStats{}
 	runtime.ReadMemStats(&stats)
 
+	var err error
 	for _, metric := range p.metrics {
 		metricName := metric.GetName()
-		metricValue, err := getFieldValue(&stats, metricName)
-		if err != nil {
-			return logger.WrapError(fmt.Sprintf("get %s runtime metric value", metricName), err)
+		metricValue, metricErr := getFieldValue(&stats, metricName)
+		if metricErr != nil {
+			err = logger.WrapError(fmt.Sprintf("get %s runtime metric value", metricName), metricErr)
+			logrus.Error(err)
+			continue
 		}
 
 		metric.SetValue(metricValue)
-		logrus.Infof("Updated metric: %v. value: %v", metricName, metric.GetStringValue())
 	}
 
-	return nil
+	return err
 }
 
 func (p *runtimeMetricsProvider) GetMetrics() <-chan metrics.Metric {
