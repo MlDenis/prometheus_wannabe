@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
@@ -25,6 +24,9 @@ func NewInMemoryStorage() storage.MetricsStorage {
 }
 
 func (s *inMemoryStorage) AddMetricValues(ctx context.Context, metricList []metrics.Metric) ([]metrics.Metric, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	result := make([]metrics.Metric, len(metricList))
 
 	for i, metric := range metricList {
@@ -71,12 +73,12 @@ func (s *inMemoryStorage) GetMetric(ctx context.Context, metricType string, metr
 	defer s.lock.RUnlock()
 	metricsByName, ok := s.metricsByType[metricType]
 	if !ok {
-		return nil, logger.WrapError(fmt.Sprintf("get metric with type %s", metricType), metrics.ErrMetricNotFound)
+		return nil, fmt.Errorf("get metric with type %s: %w", metricType, metrics.ErrMetricNotFound)
 	}
 
 	metric, ok := metricsByName[metricName]
 	if !ok {
-		return nil, logger.WrapError(fmt.Sprintf("metrics with name %v and types %v not found", metricName, metricType), metrics.ErrMetricNotFound)
+		return nil, fmt.Errorf("metrics with name %v and types %v not found: %w", metricName, metricType, metrics.ErrMetricNotFound)
 	}
 
 	return metric, nil
@@ -93,13 +95,13 @@ func (s *inMemoryStorage) Restore(ctx context.Context, metricValues map[string]m
 		if metricType == "counter" {
 			metricFactory = types.NewCounterMetric
 		} else if metricType != "gauge" {
-			return logger.WrapError(fmt.Sprintf("handle backup metric with type '%s'", metricType), metrics.ErrUnknownMetricType)
+			return fmt.Errorf("handle backup metric with type '%s': %w", metricType, metrics.ErrUnknownMetricType)
 		}
 
 		for metricName, metricValue := range metricsByType {
 			value, err := converter.ToFloat64(metricValue)
 			if err != nil {
-				return logger.WrapError("parse float metric value", err)
+				return fmt.Errorf("parse float metric value: %w", err)
 			}
 
 			metricsList, ok := s.metricsByType[metricType]
