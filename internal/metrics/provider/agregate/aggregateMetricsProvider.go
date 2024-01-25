@@ -45,10 +45,10 @@ func (a *aggregateMetricsProvider) GetMetrics() <-chan metrics.Metric {
 func (a *aggregateMetricsProvider) Update(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
-	for i := 0; i < len(a.providers); i++ {
-		num := i
+	for _, provider := range a.providers {
+		provider := provider
 		eg.Go(func() error {
-			err := a.providers[num].Update(ctx)
+			err := provider.Update(ctx)
 			if err != nil {
 				return logger.WrapError("update metrics", err)
 			}
