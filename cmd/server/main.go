@@ -7,10 +7,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"go.uber.org/zap"
-	"io"
-	"net/http"
-
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/database/postgre"
@@ -25,6 +21,9 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/file"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/memory"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
+	"go.uber.org/zap"
+	"io"
+	"net/http"
 
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
@@ -143,8 +142,10 @@ func createConfig() (*config, error) {
 
 func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsConverter, htmlPageBuilder html.HTMLPageBuilder, dbStorage database.DataBase) *chi.Mux {
 	router := chi.NewRouter()
+
 	router.Use(middleware.Logger)
 	router.Use(middleware.Compress(gzip.BestSpeed, compressContentTypes...))
+	router.Mount("/debug", middleware.Profiler())
 	router.Route("/update", func(r chi.Router) {
 		r.With(fillSingleJSONContext, updateMetrics(metricsStorage, converter)).
 			Post("/", successSingleJSONResponse())
