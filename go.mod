@@ -1,6 +1,6 @@
 module github.com/MlDenis/prometheus_wannabe
 
-go 1.20
+go 1.21.5
 
 require (
 	github.com/caarlos0/env/v7 v7.1.0
