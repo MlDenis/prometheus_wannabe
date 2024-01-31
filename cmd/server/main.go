@@ -34,6 +34,12 @@ import (
 	_ "net/http/pprof"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 // Constants
 const (
 	counterMetricName = "counter"
@@ -74,6 +80,8 @@ type metricsRequestContext struct {
 // main is the main entry point for the Prometheus Wannabe server.
 // It initializes the server, parses configuration, sets up logging, database, storage, and starts the HTTP server.
 func main() {
+	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
