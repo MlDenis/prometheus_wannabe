@@ -34,6 +34,7 @@ import (
 	_ "net/http/pprof"
 )
 
+// Constants
 const (
 	counterMetricName = "counter"
 	gaugeMetricName   = "gauge"
@@ -48,6 +49,7 @@ var compressContentTypes = []string{
 	"text/xml",
 }
 
+// Configuration struct for holding server configuration.
 type config struct {
 	Key           string          `env:"KEY"`
 	ServerURL     string          `env:"ADDRESS"`
@@ -58,15 +60,19 @@ type config struct {
 	LogLevel      zap.AtomicLevel `env:"LOG_LEVEL"`
 }
 
+// Struct for handling context keys related to metrics.
 type metricInfoContextKey struct {
 	key string
 }
 
+// Struct for handling metrics in the context of HTTP requests.
 type metricsRequestContext struct {
 	requestMetrics []*model.Metrics
 	resultMetrics  []*model.Metrics
 }
 
+// main is the main entry point for the Prometheus Wannabe server.
+// It initializes the server, parses configuration, sets up logging, database, storage, and starts the HTTP server.
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -127,6 +133,7 @@ func main() {
 	logger.SugarLogger.Sync()
 }
 
+// createConfig parses command line flags and environment variables to create a configuration object.
 func createConfig() (*config, error) {
 	conf := &config{}
 
@@ -142,6 +149,7 @@ func createConfig() (*config, error) {
 	return conf, err
 }
 
+// initRouter initializes the HTTP router for the server, including middleware and route handlers.
 func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsConverter, htmlPageBuilder html.HTMLPageBuilder, dbStorage database.DataBase) *chi.Mux {
 	router := chi.NewRouter()
 
@@ -187,6 +195,7 @@ func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsC
 	return router
 }
 
+// fillCommonURLContext is a middleware to fill common metric information in the context for HTTP requests.
 func fillCommonURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
@@ -199,6 +208,7 @@ func fillCommonURLContext(next http.Handler) http.Handler {
 	})
 }
 
+// fillGaugeURLContext is a middleware to fill gauge metric information in the context for HTTP requests.
 func fillGaugeURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
@@ -221,6 +231,7 @@ func fillGaugeURLContext(next http.Handler) http.Handler {
 	})
 }
 
+// fillCounterURLContext is a middleware to fill counter metric information in the context for HTTP requests.
 func fillCounterURLContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
@@ -243,6 +254,7 @@ func fillCounterURLContext(next http.Handler) http.Handler {
 	})
 }
 
+// fillSingleJSONContext is a middleware to fill single JSON metric information in the context for HTTP requests.
 func fillSingleJSONContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
@@ -284,6 +296,7 @@ func fillSingleJSONContext(next http.Handler) http.Handler {
 	})
 }
 
+// fillMultiJSONContext is a middleware to fill multiple JSON metric information in the context for HTTP requests.
 func fillMultiJSONContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, metricsContext := ensureMetricsContext(r)
@@ -325,6 +338,7 @@ func fillMultiJSONContext(next http.Handler) http.Handler {
 	})
 }
 
+// updateMetrics is a middleware to handle metric updates in the storage.
 func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConverter) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -370,6 +384,7 @@ func updateMetrics(storage storage.MetricsStorage, converter *model.MetricsConve
 	}
 }
 
+// fillMetricValues is a middleware to fill metric values from the storage in the context for HTTP requests.
 func fillMetricValues(storage storage.MetricsStorage, converter *model.MetricsConverter) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -397,6 +412,7 @@ func fillMetricValues(storage storage.MetricsStorage, converter *model.MetricsCo
 	}
 }
 
+// successURLValueResponse is a handler function to respond with the value of a single metric in plain text.
 func successURLValueResponse(converter *model.MetricsConverter) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, metricsContext := ensureMetricsContext(r)
@@ -417,6 +433,7 @@ func successURLValueResponse(converter *model.MetricsConverter) func(w http.Resp
 	}
 }
 
+// handleMetricsPage is a handler function to respond with an HTML page containing metric values.
 func handleMetricsPage(builder html.HTMLPageBuilder, storage storage.MetricsStorage) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		values, err := storage.GetMetricValues(r.Context())
@@ -428,12 +445,14 @@ func handleMetricsPage(builder html.HTMLPageBuilder, storage storage.MetricsStor
 	}
 }
 
+// successURLResponse is a handler function to respond with a success message in plain text.
 func successURLResponse() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		successResponse(w, "text/plain", "ok")
 	}
 }
 
+// successSingleJSONResponse is a handler function to respond with a single JSON metric in JSON format.
 func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, metricsContext := ensureMetricsContext(r)
@@ -459,6 +478,7 @@ func successSingleJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// successMultiJSONResponse is a handler function to respond with a stub JSON metric in JSON format.
 func successMultiJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -478,6 +498,7 @@ func successMultiJSONResponse() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// successResponse is a generic function to respond with a success message in the specified content type.
 func successResponse(w http.ResponseWriter, contentType string, message string) {
 	w.Header().Add("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
@@ -487,6 +508,7 @@ func successResponse(w http.ResponseWriter, contentType string, message string) 
 	}
 }
 
+// handleDBPing is a handler function to respond with a success message if the database is pingable.
 func handleDBPing(dbStorage database.DataBase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := dbStorage.Ping(r.Context())
@@ -498,6 +520,7 @@ func handleDBPing(dbStorage database.DataBase) func(w http.ResponseWriter, r *ht
 	}
 }
 
+// ensureMetricsContext ensures that the metrics context is present in the HTTP request context.
 func ensureMetricsContext(r *http.Request) (context.Context, *metricsRequestContext) {
 	const metricsContextKey = "metricsContextKey"
 	ctx := r.Context()
@@ -510,27 +533,33 @@ func ensureMetricsContext(r *http.Request) (context.Context, *metricsRequestCont
 	return ctx, metricsContext
 }
 
+// StoreFilePath returns the configured file path for storing backups.
 func (c *config) StoreFilePath() string {
 	return c.StoreFile
 }
 
+// SyncMode returns true if the server is running in sync mode, i.e., using a database or with zero store interval.
 func (c *config) SyncMode() bool {
 	return c.DB != "" || c.StoreInterval == 0
 }
 
+// String returns a formatted string representation of the server configuration.
 func (c *config) String() string {
 	return fmt.Sprintf("\nServerURL:\t%v\nStoreInterval:\t%v\nStoreFile:\t%v\nRestore:\t%v\nDb:\t%v",
 		c.ServerURL, c.StoreInterval, c.StoreFile, c.Restore, c.DB)
 }
 
+// GetKey returns the secret key used for signing metrics.
 func (c *config) GetKey() []byte {
 	return []byte(c.Key)
 }
 
+// SignMetrics returns true if metrics should be signed.
 func (c *config) SignMetrics() bool {
 	return c.Key != ""
 }
 
+// GetConnectionString returns the configured database connection string.
 func (c *config) GetConnectionString() string {
 	return c.DB
 }
