@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
@@ -27,10 +28,16 @@ type metricsPusherConfig interface {
 
 type httpMetricsPusher struct {
 	parallelLimit    int
-	client           http.Client
+	client           *http.Client
 	metricsServerURL string
 	pushTimeout      time.Duration
 	converter        *model.MetricsConverter
+}
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
 }
 
 func NewMetricsPusher(config metricsPusherConfig, converter *model.MetricsConverter) (sendler.MetricsPusher, error) {
@@ -41,7 +48,7 @@ func NewMetricsPusher(config metricsPusherConfig, converter *model.MetricsConver
 
 	return &httpMetricsPusher{
 		parallelLimit:    config.ParallelLimit(),
-		client:           http.Client{},
+		client:           &http.Client{},
 		metricsServerURL: serverURL.String(),
 		pushTimeout:      config.PushMetricsTimeout(),
 		converter:        converter,
@@ -94,13 +101,16 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 		modelMetrics[i] = modelMetric
 	}
 
-	var buffer bytes.Buffer
-	err := json.NewEncoder(&buffer).Encode(modelMetrics)
+	buf := bufPool.Get().(*bytes.Buffer)
+	defer bufPool.Put(buf)
+	buf.Reset()
+
+	err := json.NewEncoder(buf).Encode(modelMetrics)
 	if err != nil {
 		return logger.WrapError("serialize model request", err)
 	}
 
-	request, err := http.NewRequestWithContext(pushCtx, http.MethodPost, p.metricsServerURL+"/updates", &buffer)
+	request, err := http.NewRequestWithContext(pushCtx, http.MethodPost, p.metricsServerURL+"/updates", buf)
 	if err != nil {
 		return logger.WrapError("create push request", err)
 	}
@@ -125,7 +135,11 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 	}
 
 	for _, metric := range metricsList {
-		logrus.Infof("Pushed metric: %v. value: %v, status: %v", metric.GetName(), metric.GetStringValue(), response.Status)
+		logrus.WithFields(logrus.Fields{
+			"metric": metric.GetName(),
+			"value":  metric.GetStringValue(),
+			"status": response.Status,
+		}).Info("Pushed metric")
 		metric.ResetState()
 	}
 

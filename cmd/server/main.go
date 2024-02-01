@@ -7,9 +7,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/database/postgre"
@@ -24,10 +21,15 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/file"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/memory"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
+	"go.uber.org/zap"
+	"io"
+	"net/http"
 
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	_ "net/http/pprof"
 )
 
 const (
@@ -42,6 +44,16 @@ var compressContentTypes = []string{
 	"text/html",
 	"text/plain",
 	"text/xml",
+}
+
+type config struct {
+	Key           string          `env:"KEY"`
+	ServerURL     string          `env:"ADDRESS"`
+	StoreInterval int             `env:"STORE_INTERVAL"`
+	StoreFile     string          `env:"STORE_FILE"`
+	Restore       bool            `env:"RESTORE"`
+	DB            string          `env:"DATABASE_DSN"`
+	LogLevel      zap.AtomicLevel `env:"LOG_LEVEL"`
 }
 
 type metricInfoContextKey struct {
@@ -130,8 +142,10 @@ func createConfig() (*config, error) {
 
 func initRouter(metricsStorage storage.MetricsStorage, converter *model.MetricsConverter, htmlPageBuilder html.HTMLPageBuilder, dbStorage database.DataBase) *chi.Mux {
 	router := chi.NewRouter()
+
 	router.Use(middleware.Logger)
 	router.Use(middleware.Compress(gzip.BestSpeed, compressContentTypes...))
+	router.Mount("/debug", middleware.Profiler())
 	router.Route("/update", func(r chi.Router) {
 		r.With(fillSingleJSONContext, updateMetrics(metricsStorage, converter)).
 			Post("/", successSingleJSONResponse())

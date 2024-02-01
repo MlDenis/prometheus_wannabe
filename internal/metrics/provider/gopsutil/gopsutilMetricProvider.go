@@ -16,19 +16,19 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var cpuInterval = 100 * time.Millisecond
+const cpuInterval = 100 * time.Millisecond
 
 // GopsutilMetricsProvider is a provider of Gopsutil metrics.
 type GopsutilMetricsProvider struct {
 	totalMetric           metrics.Metric
 	freeMetric            metrics.Metric
-	cpuUtilizationMetrics map[int]metrics.Metric
+	cpuUtilizationMetrics []metrics.Metric
 }
 
 // NewGopsutilMetricsProvider create new instance of GopsutilMetricsProvider.
 func NewGopsutilMetricsProvider() *GopsutilMetricsProvider {
 	numCPU := runtime.NumCPU()
-	cpuUtilizationMetrics := make(map[int]metrics.Metric, numCPU)
+	cpuUtilizationMetrics := make([]metrics.Metric, numCPU)
 	for i := 0; i < numCPU; i++ {
 		cpuUtilizationMetrics[i] = types.NewGaugeMetric(fmt.Sprintf("CPUutilization%v", i+1))
 	}

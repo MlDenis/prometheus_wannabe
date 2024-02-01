@@ -109,6 +109,9 @@ func (f *fileStorage) Restore(ctx context.Context, metricValues map[string]map[s
 func (f *fileStorage) updateMetrics(metricsList []metrics.Metric) error {
 	// Read and write
 	return f.workWithFile(os.O_CREATE|os.O_RDWR, func(fileStream *os.File) error {
+		f.lock.Lock()
+		defer f.lock.Unlock()
+
 		metricsMap := map[string]metrics.Metric{} // contains?
 		for _, metric := range metricsList {
 			metricsMap[metric.GetType()+metric.GetName()] = metric
