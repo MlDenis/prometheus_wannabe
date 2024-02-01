@@ -1,3 +1,3 @@
 # cmd/agent
 
-В данной директории будет содержаться код Агента, который скомпилируется в бинарное приложение
+This directory contains the Agent code that is compiled into a binary application.

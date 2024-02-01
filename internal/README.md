@@ -1,3 +1,3 @@
 # internal
 
-В данной директории и её поддиректориях будет содержаться имплементация вашего сервиса
+This directory and its subdirectories contain the implementation of the service

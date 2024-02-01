@@ -1,3 +1,3 @@
 # cmd/agent
 
-В данной директории будет содержаться код Сервера, который скомпилируется в бинарное приложение
+This directory contains the Server code that is compiled into a binary application.
