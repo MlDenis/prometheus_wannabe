@@ -3,9 +3,10 @@ package custom
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"runtime"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"

@@ -7,6 +7,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
+
+	"go.uber.org/zap"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/database/postgre"
@@ -21,9 +26,6 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/file"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/storage/memory"
 	"github.com/MlDenis/prometheus_wannabe/internal/worker"
-	"go.uber.org/zap"
-	"io"
-	"net/http"
 
 	"github.com/caarlos0/env/v7"
 	"github.com/go-chi/chi/v5"
