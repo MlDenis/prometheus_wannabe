@@ -1,12 +1,14 @@
 package hash
 
 import (
+	"hash"
+	"sync"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
+
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
-	"hash"
-	"sync"
 )
 
 type SignerConfig interface {

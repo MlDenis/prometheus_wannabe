@@ -2,9 +2,10 @@ package database
 
 import (
 	"context"
+	"io"
+
 	"database/sql"
 	"database/sql/driver"
-	"io"
 )
 
 type DataBase interface {

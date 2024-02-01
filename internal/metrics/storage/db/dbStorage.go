@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"

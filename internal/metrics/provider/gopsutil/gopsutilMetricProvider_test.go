@@ -3,11 +3,13 @@ package gopsutil
 import (
 	"context"
 	"fmt"
-	"github.com/MlDenis/prometheus_wannabe/internal/test"
-	"github.com/stretchr/testify/assert"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGopsutilMetricsProvider_GetMetrics(t *testing.T) {

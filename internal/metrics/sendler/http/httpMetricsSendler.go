@@ -5,16 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/MlDenis/prometheus_wannabe/internal/logger"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
-	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/MlDenis/prometheus_wannabe/internal/logger"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics/model"
+	"github.com/MlDenis/prometheus_wannabe/internal/metrics/sendler"
+
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 type metricsPusherConfig interface {
@@ -124,7 +126,7 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 
 	for _, metric := range metricsList {
 		logrus.Infof("Pushed metric: %v. value: %v, status: %v", metric.GetName(), metric.GetStringValue(), response.Status)
-		metric.JumpToTheOriginalState()
+		metric.ResetState()
 	}
 
 	return nil

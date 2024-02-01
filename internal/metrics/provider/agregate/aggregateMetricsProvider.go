@@ -2,10 +2,12 @@ package agregate
 
 import (
 	"context"
+	"sync"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
+
 	"golang.org/x/sync/errgroup"
-	"sync"
 )
 
 type aggregateMetricsProvider struct {

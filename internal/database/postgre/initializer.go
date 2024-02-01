@@ -3,76 +3,12 @@ package postgre
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"github.com/sirupsen/logrus"
-	"sort"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/sirupsen/logrus"
 )
-
-var scripts = map[string]string{
-	"1 - create metric type table command": "" +
-		"CREATE TABLE IF NOT EXISTS metricType" + " ( " +
-		"	id SMALLSERIAL PRIMARY KEY, " +
-		"	name TEXT" +
-		");",
-
-	"2 - create metric table command": "" +
-		"CREATE TABLE IF NOT EXISTS metric" + " ( " +
-		"	id SERIAL PRIMARY KEY, " +
-		"	name TEXT, " +
-		"	typeId SMALLSERIAL, " +
-		"	value DOUBLE PRECISION " +
-		");",
-
-	"3 - create metric index command": "" +
-		"CREATE UNIQUE INDEX IF NOT EXISTS metric_name_type_idx " +
-		"ON metric (name, typeId);",
-
-	"4 - create metric type id procedure command": "" +
-		"CREATE OR REPLACE PROCEDURE GetOrCreateMetricTypeId(typeName IN TEXT, typeId OUT SMALLINT) " +
-		"LANGUAGE plpgsql " +
-		"AS $$ " +
-		"BEGIN " +
-		"	typeId := (SELECT id FROM metricType WHERE name = typeName); " +
-		"	IF typeId IS null THEN " +
-		"		BEGIN " +
-		"			INSERT" + " INTO " + "metricType(name)" + " VALUES (typeName); " +
-		"			typeId := (SELECT currval(pg_get_serial_sequence('metricType','id'))); " +
-		"		END; " +
-		"	END IF; " +
-		"END;$$",
-
-	"5 - create metric id procedure command": "" +
-		"CREATE OR REPLACE PROCEDURE GetOrCreateMetricId(metricTypeName IN TEXT, metricName IN TEXT, metricId OUT INT) " +
-		"LANGUAGE plpgsql " +
-		"AS $$ " +
-		"DECLARE " +
-		"	metricTypeId smallint; " +
-		"BEGIN " +
-		"	CALL GetOrCreateMetricTypeId(metricTypeName, metricTypeId); " +
-		"	metricId := (SELECT id FROM metric WHERE name = metricName AND typeId = metricTypeId); " +
-		"	IF metricId IS null THEN " +
-		"		BEGIN " +
-		"			INSERT" + " INTO metric" + "(name, typeId) VALUES (metricName, metricTypeId); " +
-		"			metricId := (SELECT currval(pg_get_serial_sequence('metric','id'))); " +
-		"		END; " +
-		"	END IF; " +
-		"END;$$",
-
-	"6 - create metric procedure command": "" +
-		"CREATE OR REPLACE PROCEDURE UpdateOrCreateMetric(metricTypeName IN TEXT, metricName IN TEXT, metricValue IN double precision) " +
-		"LANGUAGE plpgsql " +
-		"AS $$ " +
-		"DECLARE " +
-		"	metricId int; " +
-		"BEGIN " +
-		"	CALL GetOrCreateMetricId(metricTypeName, metricName, metricId); " +
-		"	UPDATE metric" + " SET value " + "= metricValue WHERE id = metricId; " +
-		"END;$$",
-}
 
 func initDB(ctx context.Context, connectionString string) (*sql.DB, error) {
 	logrus.Info("Initialize database schema")
@@ -87,22 +23,46 @@ func initDB(ctx context.Context, connectionString string) (*sql.DB, error) {
 		return nil, logger.WrapError("ping db connection", err)
 	}
 
-	i := 0
-	commandNames := make([]string, len(scripts))
-	for commandName := range scripts {
-		commandNames[i] = commandName
-		i++
-	}
-	sort.Strings(commandNames)
+	return conn, nil
+}
 
-	for _, commandName := range commandNames {
-		command := scripts[commandName]
-		logrus.Infof("Invoke %s", commandName)
-		_, err = conn.ExecContext(ctx, command)
+func getOrCreateMetricTypeID(ctx context.Context, conn *sql.DB, typeName string) (int, error) {
+	var typeID int
+	err := conn.QueryRowContext(ctx, "SELECT id FROM metricType WHERE name = $1", typeName).Scan(&typeID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = conn.QueryRowContext(ctx, "INSERT INTO metricType(name) VALUES ($1) RETURNING id", typeName).Scan(&typeID)
+		}
 		if err != nil {
-			return nil, logger.WrapError(fmt.Sprintf("invoke %s", commandName), err)
+			return 0, err
 		}
 	}
+	return typeID, nil
+}
 
-	return conn, nil
+func getOrCreateMetricID(ctx context.Context, conn *sql.DB, metricTypeName string, metricName string) (int, error) {
+	var metricID int
+	metricTypeID, err := getOrCreateMetricTypeID(ctx, conn, metricTypeName)
+	if err != nil {
+		return 0, err
+	}
+	err = conn.QueryRowContext(ctx, "SELECT id FROM metric WHERE name = $1 AND typeId = $2", metricName, metricTypeID).Scan(&metricID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = conn.QueryRowContext(ctx, "INSERT INTO metric(name, typeId) VALUES ($1, $2) RETURNING id", metricName, metricTypeID).Scan(&metricID)
+		}
+		if err != nil {
+			return 0, err
+		}
+	}
+	return metricID, nil
+}
+
+func updateOrCreateMetric(ctx context.Context, conn *sql.DB, metricTypeName string, metricName string, metricValue float64) error {
+	metricID, err := getOrCreateMetricID(ctx, conn, metricTypeName, metricName)
+	if err != nil {
+		return err
+	}
+	_, err = conn.ExecContext(ctx, "UPDATE metric SET value = $1 WHERE id = $2", metricValue, metricID)
+	return err
 }

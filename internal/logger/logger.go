@@ -2,8 +2,9 @@ package logger
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"log"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -11,24 +12,46 @@ const (
 	LogInfo  = "info"
 )
 
+// Global logger
+var log *zap.Logger
+var SugarLogger *zap.SugaredLogger
+
+// Initializing the logger with a given debug level
 func InitLogger(debugLevel string) {
+	var level zapcore.Level
 	switch debugLevel {
 	case LogInfo:
-		logrus.SetLevel(logrus.InfoLevel)
+		level = zapcore.InfoLevel
 	case LogDebug:
-		logrus.SetLevel(logrus.DebugLevel)
+		level = zapcore.DebugLevel
+	default:
+		level = zapcore.InfoLevel
+	}
+
+	config := zap.NewProductionConfig()
+	config.Level.SetLevel(level)
+	var err error
+	log, err = config.Build()
+	if err != nil {
+		panic(err)
+	}
+	SugarLogger = log.Sugar()
+}
+
+// Error logging
+func Error(message string) {
+	if log != nil {
+		log.Error(message)
 	}
 }
 
-func Error(message string) {
-	log.Printf("[ERROR]: %v\r\n", message)
-}
-
 func ErrorObj(err error) {
-	ErrorFormat("%v", err)
+	if err != nil {
+		Error(err.Error())
+	}
 }
 
-func ErrorFormat(format string, v ...any) {
+func ErrorFormat(format string, v ...interface{}) {
 	Error(fmt.Sprintf(format, v...))
 }
 

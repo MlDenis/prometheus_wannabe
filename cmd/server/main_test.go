@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/converter"
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/MlDenis/prometheus_wannabe/internal/hash"
@@ -15,6 +16,7 @@ import (
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"io"
 	"net/http"
 	"net/http/httptest"

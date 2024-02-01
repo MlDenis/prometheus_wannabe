@@ -3,6 +3,7 @@ package postgre
 import (
 	"context"
 	"database/sql"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
@@ -45,8 +46,7 @@ func (p *postgresDataBase) UpdateItems(ctx context.Context, records []*database.
 
 func (p *postgresDataBase) ReadItem(ctx context.Context, metricType string, metricName string) (*database.DBItem, error) {
 	result, err := p.callInTransactionResult(ctx, func(ctx context.Context, tx *sql.Tx) ([]*database.DBItem, error) {
-		const command = "" +
-			"SELECT mt.name, m.name, m.value " +
+		const command = "SELECT mt.name, m.name, m.value " +
 			"FROM metric m " +
 			"JOIN metricType mt ON m.typeId = mt.id " +
 			"WHERE " +
@@ -77,8 +77,7 @@ func (p *postgresDataBase) ReadItem(ctx context.Context, metricType string, metr
 
 func (p *postgresDataBase) ReadAllItems(ctx context.Context) ([]*database.DBItem, error) {
 	return p.callInTransactionResult(ctx, func(ctx context.Context, tx *sql.Tx) ([]*database.DBItem, error) {
-		const command = "" +
-			"SELECT mt.name, m.name, m.value " +
+		const command = "SELECT mt.name, m.name, m.value " +
 			"FROM metric m " +
 			"JOIN metricType mt on m.typeId = mt.id"
 

@@ -2,9 +2,10 @@ package storage
 
 import (
 	"context"
+	"sync"
+
 	"github.com/MlDenis/prometheus_wannabe/internal/logger"
 	"github.com/MlDenis/prometheus_wannabe/internal/metrics"
-	"sync"
 )
 
 type storageStrategyConfig interface {
