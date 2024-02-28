@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/encrypt"
 	"io"
 	"net/http"
 	"net/url"
@@ -105,6 +106,8 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 	defer bufPool.Put(buf)
 	buf.Reset()
 
+	buffer := buf.Bytes()
+
 	err := json.NewEncoder(buf).Encode(modelMetrics)
 	if err != nil {
 		return logger.WrapError("serialize model request", err)
@@ -115,6 +118,14 @@ func (p *httpMetricsPusher) pushMetrics(ctx context.Context, metricsList []metri
 		return logger.WrapError("create push request", err)
 	}
 	request.Header.Add("Content-Type", "application/json")
+
+	if encrypt.MetricsEncryptor != nil {
+		encryptBuf, err := encrypt.MetricsEncryptor.Encrypt(buffer)
+		if err != nil {
+			fmt.Println("Encrypt error")
+		}
+		buffer = encryptBuf
+	}
 
 	response, err := p.client.Do(request)
 	if err != nil {

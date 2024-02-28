@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/encrypt"
+	"log"
 
 	"github.com/MlDenis/prometheus_wannabe/internal/config"
 	"github.com/MlDenis/prometheus_wannabe/internal/hash"
@@ -19,7 +21,14 @@ import (
 	"github.com/caarlos0/env/v7"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 func main() {
+	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
 
 	conf, err := createConfig()
 	if err != nil {
@@ -50,6 +59,12 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	if conf.CryptoKey != "" {
+		if err := encrypt.InitEncryptor(conf.CryptoKey); err != nil {
+			log.Fatalf("Create encryptor error: %s\n", err)
+		}
+	}
 
 	go getMetricsWorker.StartWork(ctx, conf.UpdateMetricsInterval)
 	pushMetricsWorker.StartWork(ctx, conf.SendMetricsInterval)
@@ -92,6 +107,7 @@ func createConfig() (*config.Config, error) {
 	flag.IntVar(&conf.PushTimeout, "t", 10, "Push metrics timeout")
 	flag.IntVar(&conf.SendMetricsInterval, "r", 10, "Send metrics interval")
 	flag.IntVar(&conf.UpdateMetricsInterval, "p", 2, "Update metrics interval")
+	flag.StringVar(&conf.CryptoKey, "crypto-key", "", "Crypto key")
 	flag.Parse()
 
 	err := env.Parse(conf)
