@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/MlDenis/prometheus_wannabe/internal/encrypt"
 	"io"
 	"net/http"
 
@@ -64,6 +65,7 @@ type config struct {
 	Restore       bool            `env:"RESTORE"`
 	DB            string          `env:"DATABASE_DSN"`
 	LogLevel      zap.AtomicLevel `env:"LOG_LEVEL"`
+	CryptoKey     string          `env:"CRYPTO_KEY"`
 }
 
 // Struct for handling context keys related to metrics.
@@ -118,6 +120,13 @@ func main() {
 	htmlPageBuilder := html.NewSimplePageBuilder()
 	router := initRouter(storageStrategy, converter, htmlPageBuilder, base)
 
+	if conf.CryptoKey != "" {
+		if err := encrypt.InitializeDecryptor(conf.CryptoKey); err != nil {
+			logger.Error("Create encryptor err")
+		}
+		router.Use(encrypt.Middleware)
+	}
+
 	if conf.Restore {
 		logger.SugarLogger.Error("Restore metrics from backup")
 		err = storageStrategy.RestoreFromBackup(ctx)
@@ -151,6 +160,7 @@ func createConfig() (*config, error) {
 	flag.StringVar(&conf.ServerURL, "a", "localhost:8080", "Server listen URL")
 	flag.StringVar(&conf.StoreFile, "f", "/tmp/metrics-db.json", "Backup storage file path")
 	flag.StringVar(&conf.DB, "d", "", "Database connection stirng")
+	flag.StringVar(&conf.CryptoKey, "crypto-key", "", "Crypto key")
 	flag.Parse()
 
 	err := env.Parse(conf)

@@ -15,6 +15,7 @@ type Config struct {
 	UpdateMetricsInterval int          `env:"POLL_INTERVAL"`
 	LogLevel              logrus.Level `env:"LOG_LEVEL"`
 	CollectMetricsList    []string
+	CryptoKey             string `env:"CRYPTO_KEY"`
 }
 
 func (c *Config) MetricsList() []string {
